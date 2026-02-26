@@ -368,11 +368,11 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
                 error_data = response.get("error", {})
                 logger.warning(f"Request failed: {error_data.get('message')}")
                 
-                if 500 <= response["status_code"] < 600:
-                    failed_requests.append({
-                        "url": response["original_url"],
-                        "metadata": metadata
-                    })
+                # if 500 <= response["status_code"] < 600:
+                failed_requests.append({
+                    "url": response["original_url"],
+                    "metadata": metadata
+                })
                 continue
             
             response_body = response.get("data")
