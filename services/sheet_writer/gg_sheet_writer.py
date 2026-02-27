@@ -17,8 +17,8 @@ class GoogleSheetWriter:
     
     # Retry configuration
     MAX_RETRIES = 5
-    BASE_BACKOFF = 2  # seconds
-    MAX_BACKOFF = 60  # seconds
+    BASE_BACKOFF = 20  # seconds
+    MAX_BACKOFF = 600  # seconds
     
     def __init__(self, credentials_path: str, spreadsheet_id: str):
         """
