@@ -220,7 +220,10 @@ class GoogleSheetWriter:
             
             self._retry_operation(_add_cols, f"Add {cols_to_add} columns")
 
-        is_sheet_empty = worksheet.row_count == 0 or not worksheet.get('A1')
+        def _check_a1():
+            return worksheet.get('A1')
+        
+        is_sheet_empty = worksheet.row_count == 0 or not self._retry_operation(_check_a1, "Check A1 cell")
 
         # ---- OVERWRITE MODE ----
         if is_overwrite:
