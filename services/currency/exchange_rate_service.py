@@ -129,7 +129,6 @@ class CurrencyExchangeService:
         - Cập nhật cột 'currency' / 'tiền tệ' sang target_currency.
         - Row không có Account ID hoặc không có trong config → giữ nguyên.
         """
-        print(data)
         if not data:
             return data
 

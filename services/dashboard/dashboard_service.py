@@ -22,7 +22,7 @@ def get_task_logs_from_db(db_client: MongoDbClient, time_range: str = "7d") -> L
             cutoff = now - timedelta(days=30)
             query["start_time"] = {"$gte": cutoff}
         
-        tasks_cursor = db_client.db.task_logs.find(query).sort("start_time", -1).limit(10000)
+        tasks_cursor = db_client.db.task_logs.find(query, {"full_logs": 0}).sort("start_time", -1).limit(10000)
         tasks = list(tasks_cursor)
         for task in tasks:
             task['_id'] = str(task['_id'])
