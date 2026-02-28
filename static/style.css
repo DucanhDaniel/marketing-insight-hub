@@ -391,3 +391,31 @@ tbody tr:hover { background-color: #f1f2f6; }
 #fb-tasks-body tr:hover {
     background-color: #e8f6f3; /* Light green hover */
 }
+
+/* Form control (select dropdowns) */
+.form-control {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.form-control:focus { border-color: var(--primary-color); }
+
+/* Additional status colors */
+.status-FAILURE  { color: #c0392b; font-weight: bold; }
+.status-CANCELLED { color: #7f8c8d; font-weight: bold; }
+.status-REVOKED  { color: #7f8c8d; font-weight: bold; }
+.status-PENDING  { color: #e67e22; font-weight: bold; }
+.status-RUNNING  { color: #2980b9; font-weight: bold; }
+
+/* Clickable email rows */
+.clickable-row:hover td { background-color: #eaf4fb; }
+
+/* Email failed-tasks modal rows */
+#email-failed-tasks-body tr { cursor: pointer; transition: background-color 0.1s; }
+#email-failed-tasks-body tr:hover { background-color: #fef2f2; }

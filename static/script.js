@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Date Range Filter Event
     document.getElementById('date-range').addEventListener('change', () => {
+        fetchAndRender();
+    });
+
+    // Task Status Filter Event
+    document.getElementById('task-status-filter').addEventListener('change', () => {
         if (rawData) applyFilterAndRender();
     });
 
@@ -72,7 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchAndRender() {
     try {
-        const response = await fetch(API_ENDPOINT);
+        const rangeType = document.getElementById('date-range').value;
+        const response = await fetch(`${API_ENDPOINT}?time_range=${rangeType}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         rawData = await response.json();
@@ -89,22 +95,8 @@ async function fetchAndRender() {
 function applyFilterAndRender() {
     if (!rawData) return;
 
-    const rangeType = document.getElementById('date-range').value;
-    const now = new Date();
-    let cutoffDate = null;
-
-    if (rangeType === '24h') cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    else if (rangeType === '7d') cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    else if (rangeType === '30d') cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    // 1. Filter Tasks
+    // 1. Get Tasks (Backend has already filtered by Date Range)
     let filteredTasks = rawData.task_logs || [];
-    if (cutoffDate) {
-        filteredTasks = filteredTasks.filter(t => {
-            const tDate = t.start_time ? new Date(t.start_time.replace('+00:00', '')) : new Date();
-            return tDate >= cutoffDate;
-        });
-    }
 
     // 2. Render based on active tab
     if (currentTab === 'overview') {
@@ -168,16 +160,22 @@ function renderOverview(tasks) {
             failedBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#999;">No failed tasks</td></tr>';
         } else {
             failedBody.innerHTML = sortedFailedUsers.map(([email, count]) => `
-                <tr>
-                    <td>${email}</td>
+                <tr class="clickable-row" onclick="openEmailFailedModal('${email.replace(/'/g, "&apos;")}')"
+                    title="Click to view failed tasks for ${email}"
+                    style="cursor:pointer;">
+                    <td style="color:#3498db; text-decoration:underline;">${email}</td>
                     <td><strong style="color: #e74c3c;">${count}</strong></td>
                 </tr>
             `).join('');
         }
     }
 
-    // 6. Recent Tasks Table
-    renderTasksTable(tasks, 'tasks-table-body');
+    // 6. Recent Tasks Table - filter by status
+    const statusFilter = document.getElementById('task-status-filter')?.value || 'all';
+    const tasksForTable = statusFilter === 'all'
+        ? tasks
+        : tasks.filter(t => (t.status || '').toUpperCase() === statusFilter.toUpperCase());
+    renderTasksTable(tasksForTable, 'tasks-table-body');
 }
 
 // ================================================================
@@ -880,6 +878,60 @@ function hexToRgba(hex, alpha) {
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// ================================================================
+// EMAIL FAILED TASKS MODAL
+// ================================================================
+
+function openEmailFailedModal(email) {
+    if (!rawData || !rawData.task_logs) return;
+
+    const failedTasks = rawData.task_logs.filter(t =>
+        t.user_email === email &&
+        (t.status === 'FAILED' || t.status === 'FAILURE')
+    );
+
+    // Header
+    document.getElementById('email-failed-title').textContent = `Failed Tasks: ${email}`;
+    document.getElementById('email-failed-meta').innerHTML =
+        `<span style="color:#e74c3c; font-weight:600;">${failedTasks.length} failed task${failedTasks.length !== 1 ? 's' : ''}</span>`;
+
+    // Table body
+    const tbody = document.getElementById('email-failed-tasks-body');
+    if (failedTasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">No failed tasks found</td></tr>';
+    } else {
+        tbody.innerHTML = failedTasks.map(t => `
+            <tr onclick="openTaskDetailFromEmailModal('${t.job_id}')" style="cursor:pointer;" title="Click to view task detail">
+                <td><span class="job-id">${(t.job_id || '').substring(0, 8)}...</span></td>
+                <td>${t.task_type || 'N/A'}</td>
+                <td class="status-${t.status}">${t.status}</td>
+                <td>${formatDateSafe(t.start_time)}</td>
+                <td>${t.duration_seconds ? parseFloat(t.duration_seconds).toFixed(2) + 's' : 'N/A'}</td>
+                <td class="task-message" style="max-width:300px; white-space:normal; word-wrap:break-word;">${t.message || ''}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Show modal
+    const modal = document.getElementById('email-failed-modal');
+    modal.style.display = 'block';
+
+    // Close handlers
+    document.getElementById('email-failed-close').onclick = () => modal.style.display = 'none';
+    window.addEventListener('click', function emailModalOutsideClick(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            window.removeEventListener('click', emailModalOutsideClick);
+        }
+    });
+}
+
+function openTaskDetailFromEmailModal(jobId) {
+    // Close the email modal then open task detail
+    document.getElementById('email-failed-modal').style.display = 'none';
+    openTaskDetail(jobId);
 }
 
 

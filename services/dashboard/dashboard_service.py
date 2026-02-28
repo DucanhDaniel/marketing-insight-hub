@@ -6,11 +6,23 @@ import redis
 
 logger = logging.getLogger(__name__)
 
-def get_task_logs_from_db(db_client: MongoDbClient) -> List[Dict]:
+def get_task_logs_from_db(db_client: MongoDbClient, time_range: str = "7d") -> List[Dict]:
     """Lấy log tác vụ từ MongoDB."""
     if not db_client: return []
     try:
-        tasks_cursor = db_client.db.task_logs.find({}).sort("start_time", -1).limit(10000)
+        now = datetime.now(timezone.utc)
+        query = {}
+        if time_range == "24h":
+            cutoff = now - timedelta(hours=24)
+            query["start_time"] = {"$gte": cutoff}
+        elif time_range == "7d":
+            cutoff = now - timedelta(days=7)
+            query["start_time"] = {"$gte": cutoff}
+        elif time_range == "30d":
+            cutoff = now - timedelta(days=30)
+            query["start_time"] = {"$gte": cutoff}
+        
+        tasks_cursor = db_client.db.task_logs.find(query).sort("start_time", -1).limit(10000)
         tasks = list(tasks_cursor)
         for task in tasks:
             task['_id'] = str(task['_id'])
@@ -80,11 +92,11 @@ def get_api_timeseries_counts(redis_client: redis.Redis, endpoints: List[str], h
         logger.error(f"Error fetching timeseries data: {e}")
         return {}
 
-def get_dashboard_data(db_client: MongoDbClient, redis_client: redis.Redis) -> Dict[str, Any]:
+def get_dashboard_data(db_client: MongoDbClient, redis_client: redis.Redis, time_range: str = "7d") -> Dict[str, Any]:
     """
     Tổng hợp và trả về tất cả dữ liệu cần thiết cho dashboard.
     """
-    task_logs = get_task_logs_from_db(db_client)
+    task_logs = get_task_logs_from_db(db_client, time_range)
     api_total_counts = get_api_total_counts(redis_client)
     
     endpoints_with_data = list(api_total_counts.keys())

@@ -347,6 +347,65 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
         return metadata
     
     # ==================== WAVE PROCESSING ====================
+
+    def _execute_wave_with_retry(
+        self,
+        requests_for_wave: list,
+        selected_fields: list,
+        wave_number: int,
+        max_retries: int = None
+    ) -> dict:
+        """
+        Execute a wave and retry any failed requests (e.g. from DNS/network errors).
+        Returns the merged wave_result after all retries.
+        """
+        import time as _time
+        if max_retries is None:
+            max_retries = self.MAX_RETRIES
+
+        responses = self._execute_wave(
+            requests_for_wave,
+            self.DEFAULT_BATCH_SIZE,
+            self.DEFAULT_SLEEP_TIME,
+            wave_number
+        )
+        wave_result = self._process_wave_responses(responses, selected_fields)
+
+        pending_failed = wave_result.get("failed_requests", [])
+
+        for attempt in range(1, max_retries + 1):
+            if not pending_failed:
+                break
+
+            logger.warning(
+                f"  ⚠ Wave {wave_number}: {len(pending_failed)} request(s) failed "
+                f"(DNS/network error). Retrying in 10s... (attempt {attempt}/{max_retries})"
+            )
+            _time.sleep(10)
+
+            retry_responses = self._execute_wave(
+                pending_failed,
+                self.DEFAULT_BATCH_SIZE,
+                self.DEFAULT_SLEEP_TIME,
+                wave_number
+            )
+            retry_result = self._process_wave_responses(retry_responses, selected_fields)
+
+            # Merge retry results into main wave_result
+            wave_result["data_rows"].extend(retry_result["data_rows"])
+            wave_result["metadata_map"].update(retry_result["metadata_map"])
+            wave_result["next_wave_requests"].extend(retry_result["next_wave_requests"])
+
+            pending_failed = retry_result.get("failed_requests", [])
+
+        if pending_failed:
+            logger.error(
+                f"  ✗ Wave {wave_number}: {len(pending_failed)} request(s) permanently failed "
+                f"after {max_retries} retries. They will be skipped."
+            )
+
+        return wave_result
+
     
     def _process_wave_responses(
         self,
@@ -486,15 +545,10 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
         
         while requests_for_wave:
             logger.info(f"Processing insights wave {wave_count}...")
-            
-            responses = self._execute_wave(
-                requests_for_wave,
-                self.DEFAULT_BATCH_SIZE,
-                self.DEFAULT_SLEEP_TIME,
-                wave_count
+
+            wave_result = self._execute_wave_with_retry(
+                requests_for_wave, selected_fields, wave_count
             )
-            
-            wave_result = self._process_wave_responses(responses, selected_fields)
             all_insights_data.extend(wave_result["data_rows"])
             requests_for_wave = wave_result["next_wave_requests"]
             wave_count += 1
@@ -525,15 +579,10 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
         
         while requests_for_wave:
             logger.info(f"Processing metadata wave {wave_count}: {len(requests_for_wave)} requests")
-            
-            responses = self._execute_wave(
-                requests_for_wave,
-                self.DEFAULT_BATCH_SIZE,
-                self.DEFAULT_SLEEP_TIME,
-                wave_count
+
+            wave_result = self._execute_wave_with_retry(
+                requests_for_wave, selected_fields, wave_count
             )
-            
-            wave_result = self._process_wave_responses(responses, selected_fields)
             combined_metadata.update(wave_result["metadata_map"])
             requests_for_wave = wave_result["next_wave_requests"]
             wave_count += 1

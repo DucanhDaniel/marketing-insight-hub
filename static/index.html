@@ -102,6 +102,7 @@
 
                     <div class="chart-container">
                         <h3>Top Users (Failed Tasks)</h3>
+                        <p style="font-size: 11px; color: #999; margin: 0 0 6px;">Click vào email để xem chi tiết</p>
                         <div class="table-wrapper-small" style="height: 250px; overflow-y: auto;">
                             <table class="simple-table">
                                 <thead>
@@ -141,7 +142,15 @@
 
 
                 <div class="table-section">
-                    <h3>Recent Tasks Log (Max 1000 tasks)</h3>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                        <h3 style="margin: 0;">Recent Tasks Log (Max 1000 tasks)</h3>
+                        <select id="task-status-filter" class="form-control" style="width: auto; min-width: 150px;">
+                            <option value="all">All Status</option>
+                            <option value="SUCCESS">✅ SUCCESS</option>
+                            <option value="FAILED">❌ FAILED</option>
+                            <option value="STARTED">🔄 STARTED</option>
+                        </select>
+                    </div>
                     <table>
                         <thead>
                             <tr>
@@ -313,6 +322,34 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Email Failed Tasks Modal -->
+    <div id="email-failed-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <span class="close-modal" id="email-failed-close">&times;</span>
+            <div class="modal-header">
+                <h2 id="email-failed-title">Failed Tasks</h2>
+                <div class="modal-meta" id="email-failed-meta"></div>
+            </div>
+            <div class="modal-body">
+                <div class="table-section" style="margin-top: 0;">
+                    <table class="simple-table">
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>Task Type</th>
+                                <th>Status</th>
+                                <th>Start Time</th>
+                                <th>Duration (s)</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody id="email-failed-tasks-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Task Detail Modal -->

@@ -41,7 +41,7 @@ async def read_root():
 from services.dashboard.dashboard_service import get_dashboard_data, get_task_log
 
 @app.get("/api/dashboard", tags=["Dashboard"])
-def dashboard_endpoint():
+def dashboard_endpoint(time_range: str = "7d"):
     """
     Tổng hợp và trả về tất cả dữ liệu cần thiết cho dashboard.
     """
@@ -49,7 +49,7 @@ def dashboard_endpoint():
         raise HTTPException(status_code=503, detail="Database or Redis connection is unavailable.")
     
     try:
-        return get_dashboard_data(db_client, redis_client)
+        return get_dashboard_data(db_client, redis_client, time_range)
         
     except Exception as e:
         logger.error(f"Lỗi khi truy vấn dashboard data: {e}", exc_info=True)
