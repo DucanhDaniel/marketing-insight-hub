@@ -20,10 +20,21 @@ class GoogleSheetWriter:
     BASE_BACKOFF = 20  # seconds
     MAX_BACKOFF = 600  # seconds
     
-    def __init__(self, credentials_path: str, spreadsheet_id: str):
+    def __init__(self, credentials_path: str, spreadsheet_id: str, redis_client=None):
         """
         Khởi tạo writer và xác thực với Google.
         """
+        self.redis_client = redis_client
+        if self.redis_client is None:
+            import redis
+            self.redis_client = redis.Redis(
+                host=os.getenv('REDIS_HOST', 'localhost'),
+                port=6379,
+                db=0,
+                password=os.getenv('REDIS_PASSWORD'),
+                decode_responses=True
+            )
+
         if not os.path.exists(credentials_path):
             raise FileNotFoundError(f"Không tìm thấy file credentials tại: {credentials_path}")
             
@@ -37,6 +48,31 @@ class GoogleSheetWriter:
             logger.info(f"Đã mở thành công spreadsheet: '{self.spreadsheet.title}'")
         except Exception as e:
             raise Exception(f"Lỗi khi mở spreadsheet {spreadsheet_id}: {str(e)}") from e
+
+    def _acquire_token(self, operation_name: str):
+        """Rate limiter sử dụng Redis: Tối đa 55 token mỗi phút để đề phòng API limit (60 req/min)"""
+        if not self.redis_client:
+            return
+            
+        while True:
+            current_minute = int(time.time() // 60)
+            key = f"gsheets_rate_limit:{current_minute}"
+            
+            try:
+                count = self.redis_client.incr(key)
+                if count == 1:
+                    self.redis_client.expire(key, 120)  # Tự xóa key sau 2 phút
+                    
+                if count <= 55:
+                    return
+                    
+                sleep_time = 60 - (time.time() % 60)
+                if sleep_time > 0:
+                    logger.warning(f"Google Sheets Rate Limit Reached (55 req/min). '{operation_name}' is sleeping for {sleep_time:.1f}s...")
+                    time.sleep(sleep_time + 0.5)
+            except Exception as e:
+                logger.error(f"Error checking redis rate limit: {e}")
+                return # Bỏ qua rate limit nếu kết nối Redis lỗi để tránh kẹt task
 
     def _retry_operation(
         self, 
@@ -63,6 +99,8 @@ class GoogleSheetWriter:
         
         for attempt in range(1, self.MAX_RETRIES + 1):
             try:
+                self._acquire_token(operation_name)
+                
                 result = operation(*args, **kwargs)
                 
                 if attempt > 1:
@@ -133,8 +171,8 @@ class GoogleSheetWriter:
             f"Get/Create worksheet '{sheet_name}'"
         )
 
-    def _format_columns(self, worksheet: gspread.Worksheet, headers: list):
-        """Định dạng các cột với retry"""
+    def _get_format_column_requests(self, sheet_id: int, headers: list) -> list:
+        """Tạo danh sách các request định dạng cột để gộp vào batch update"""
         text_columns = {
             "advertiser_id", "campaign_id", "store_id", "item_group_id", 
             "item_id", "tt_user_id", "video_id", "id", "adset_id",
@@ -171,7 +209,7 @@ class GoogleSheetWriter:
                 requests.append({
                     "repeatCell": {
                         "range": {
-                            "sheetId": worksheet.id,
+                            "sheetId": sheet_id,
                             "startColumnIndex": i,
                             "endColumnIndex": i + 1,
                             "startRowIndex": 1
@@ -181,15 +219,7 @@ class GoogleSheetWriter:
                     }
                 })
         
-        if requests:
-            def _format():
-                return self.spreadsheet.batch_update({"requests": requests})
-            
-            self._retry_operation(
-                _format,
-                f"Format {len(requests)} columns"
-            )
-            logger.info(f"Đã áp dụng định dạng cho {len(requests)} cột.")
+        return requests
 
     def write_data(self, data_to_write: list, headers: list, options: dict) -> int:
         """
@@ -210,25 +240,43 @@ class GoogleSheetWriter:
 
         worksheet = self._get_or_create_worksheet(sheet_name)
         
+        # Requests batch cho format và AddCols
+        batch_requests = []
+        
         # Ensure enough columns
         if len(headers) > worksheet.col_count:
             cols_to_add = len(headers) - worksheet.col_count
-            logger.info(f"Thêm {cols_to_add} cột mới...")
-            
-            def _add_cols():
-                return worksheet.add_cols(cols_to_add)
-            
-            self._retry_operation(_add_cols, f"Add {cols_to_add} columns")
+            logger.info(f"Thêm {cols_to_add} cột mới bằng batch request...")
+            batch_requests.append({
+                "appendDimension": {
+                    "sheetId": worksheet.id,
+                    "dimension": "COLUMNS",
+                    "length": cols_to_add
+                }
+            })
 
-        def _check_a1():
-            return worksheet.get('A1')
-        
-        is_sheet_empty = worksheet.row_count == 0 or not self._retry_operation(_check_a1, "Check A1 cell")
+        header_format_request = {
+            "repeatCell": {
+                "range": {
+                    "sheetId": worksheet.id,
+                    "startRowIndex": 0,
+                    "endRowIndex": 1
+                },
+                "cell": {
+                    "userEnteredFormat": {
+                        "textFormat": {"bold": True},
+                        "horizontalAlignment": "CENTER"
+                    }
+                },
+                "fields": "userEnteredFormat(textFormat,horizontalAlignment)"
+            }
+        }
 
         # ---- OVERWRITE MODE ----
         if is_overwrite:
             logger.info(f"Chế độ Ghi đè. Xóa và ghi lại sheet '{sheet_name}'...")
             
+            # 1. Clear sheet
             def _clear():
                 return worksheet.clear()
             
@@ -248,7 +296,7 @@ class GoogleSheetWriter:
             ]
             rows = [list(headers)] + rows_data
             
-            # Write data with retry
+            # 2. Write data with retry
             def _update():
                 return worksheet.update(
                     range_name='A1', 
@@ -258,16 +306,15 @@ class GoogleSheetWriter:
             
             self._retry_operation(_update, f"Write {len(rows)} rows (overwrite)")
             
-            # Format header
-            def _format_header():
-                return worksheet.format(
-                    "1:1", 
-                    {'textFormat': {'bold': True}, 'horizontalAlignment': 'CENTER'}
-                )
+            # 3. Batch updates (Header format + Column format + Add Cols)
+            batch_requests.append(header_format_request)
+            batch_requests.extend(self._get_format_column_requests(worksheet.id, headers))
             
-            self._retry_operation(_format_header, "Format header row")
-            
-            self._format_columns(worksheet, headers)
+            if batch_requests:
+                def _batch_format():
+                    return self.spreadsheet.batch_update({"requests": batch_requests})
+                self._retry_operation(_batch_format, f"Batch update structural/formats ({len(batch_requests)} rules)")
+                
             return len(data_to_write)
 
         # ---- APPEND MODE ----
@@ -276,7 +323,7 @@ class GoogleSheetWriter:
         if not data_to_write:
             return 0
         
-        # Get existing headers with retry
+        # 1. Get existing headers
         def _get_headers():
             return worksheet.row_values(1)
         
@@ -285,37 +332,57 @@ class GoogleSheetWriter:
         new_headers_to_add = [h for h in headers if h not in existing_headers]
         final_headers = existing_headers + new_headers_to_add
 
+        batch_requests = [] # Reset lại batch cho mảng final
+        
         # Check columns again after merging headers
         if len(final_headers) > worksheet.col_count:
             cols_to_add = len(final_headers) - worksheet.col_count
-            logger.info(f"Append mode: Thêm {cols_to_add} cột mới...")
-            
-            def _add_cols():
-                return worksheet.add_cols(cols_to_add)
-            
-            self._retry_operation(_add_cols, f"Add {cols_to_add} columns (append)")
+            logger.info(f"Append mode: Thêm {cols_to_add} cột mới bằng batch...")
+            batch_requests.append({
+                "appendDimension": {
+                    "sheetId": worksheet.id,
+                    "dimension": "COLUMNS",
+                    "length": cols_to_add
+                }
+            })
 
-        # Add new headers if needed
+        # Cập nhật giá trị header mới và format header mới nếu có
         if new_headers_to_add:
-            logger.info(f"Thêm headers mới: {new_headers_to_add}")
-            start_col = len(existing_headers) + 1
+            logger.info(f"Thêm headers mới bằng batch_update: {new_headers_to_add}")
+            start_col = len(existing_headers)
             
-            def _update_headers():
-                return worksheet.update(
-                    range_name=gspread.utils.rowcol_to_a1(1, start_col),
-                    values=[new_headers_to_add],
-                    value_input_option='USER_ENTERED'
-                )
+            # Giá trị cho Cells
+            cells = [{"userEnteredValue": {"stringValue": str(h)}} for h in new_headers_to_add]
+            batch_requests.append({
+                "updateCells": {
+                    "rows": [{"values": cells}],
+                    "fields": "userEnteredValue",
+                    "start": {
+                        "sheetId": worksheet.id,
+                        "rowIndex": 0,
+                        "columnIndex": start_col
+                    }
+                }
+            })
             
-            self._retry_operation(_update_headers, "Update new headers")
-            
-            def _format_header():
-                return worksheet.format(
-                    "1:1",
-                    {'textFormat': {'bold': True}, 'horizontalAlignment': 'CENTER'}
-                )
-            
-            self._retry_operation(_format_header, "Format header row")
+            # Format header range mới
+            batch_requests.append({
+                "repeatCell": {
+                    "range": {
+                        "sheetId": worksheet.id,
+                        "startRowIndex": 0,
+                        "endRowIndex": 1,
+                        "startColumnIndex": start_col
+                    },
+                    "cell": {
+                        "userEnteredFormat": {
+                            "textFormat": {"bold": True},
+                            "horizontalAlignment": "CENTER"
+                        }
+                    },
+                    "fields": "userEnteredFormat(textFormat,horizontalAlignment)"
+                }
+            })
         
         # Convert to rows
         rows_to_append = [
@@ -327,7 +394,7 @@ class GoogleSheetWriter:
             for row in data_to_write
         ]
         
-        # Append rows with retry
+        # 2. Append rows values
         def _append():
             return worksheet.append_rows(
                 rows_to_append,
@@ -336,7 +403,14 @@ class GoogleSheetWriter:
         
         self._retry_operation(_append, f"Append {len(rows_to_append)} rows")
         
-        self._format_columns(worksheet, final_headers)
+        # 3. Batch column format
+        batch_requests.extend(self._get_format_column_requests(worksheet.id, final_headers))
+        
+        if batch_requests:
+            def _batch_format():
+                return self.spreadsheet.batch_update({"requests": batch_requests})
+            self._retry_operation(_batch_format, f"Batch update structural/formats ({len(batch_requests)} rules)")
+            
         return len(rows_to_append)
     
     def log_progress(self, task_id: str, status: str, message: str, progress: int):

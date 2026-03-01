@@ -183,7 +183,7 @@ def run_report_job(context: Dict[str, Any]):
     logger.info(f"[Job {job_id}] Starting Celery task for type: {task_type}")
     
     # Khởi tạo sheet writer
-    writer = GoogleSheetWriter(CREDENTIALS_PATH, spreadsheet_id)
+    writer = GoogleSheetWriter(CREDENTIALS_PATH, spreadsheet_id, redis_client=redis_client)
 
     # --- SETUP LOG CAPTURE ---
     log_capture_string = io.StringIO()
