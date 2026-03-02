@@ -222,10 +222,7 @@ class GoogleSheetWriter:
         for i, header in enumerate(headers):
             format_pattern = None
             
-            # Note: TIKTOK_PERCENT_METRICS was checking for exact match before
             if header in number_columns or "Cost" in header or "Chi phí" in header:
-                # We can't do the dynamic check for decimals easily in this phase without data, 
-                # so we default to decimal for numberColumns to emulate the most common case
                 format_pattern = {"type": "NUMBER", "pattern": "#,##0.00"}
             elif header in text_columns or header.endswith("_id") or header.endswith("Id"):
                 format_pattern = {"type": "TEXT", "pattern": "@"}
@@ -418,14 +415,22 @@ class GoogleSheetWriter:
             })
         
         # Convert to rows
-        rows_to_append = [
-            [
-                self._create_image_formula(row.get(h, '')) if h == 'product_img'
-                else row.get(h, '')
-                for h in final_headers
-            ]
-            for row in data_to_write
-        ]
+        rows_to_append = []
+        for row in data_to_write:
+            current_row = []
+            for h in final_headers:
+                val = row.get(h, '')
+                
+                # Nếu là cột cần xử lý số thập phân (cpc, ctr, frequency, v.v.)
+                if h in rate_and_small_metrics and isinstance(val, (int, float)):
+                    # Convert 1.06 (float) -> "1,06" (string) để khớp Locale VN
+                    val = str(val).replace('.', ',')
+                
+                elif h == 'product_img':
+                    val = self._create_image_formula(val)
+                
+                current_row.append(val)
+            rows_to_append.append(current_row)
         
         # 2. Append rows values
         def _append():
