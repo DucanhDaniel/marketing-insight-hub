@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import logging
 from services.facebook.err_handler.rate_limit import EnhancedBackoffHandler
+from services.facebook.utils.batch_sender import send_batch_request
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -26,8 +27,6 @@ class FacebookAdsBaseReporter:
     
     # Constants
     API_VERSION = "v24.0"
-    BATCH_API_URL = "http://facebook_batch_server:8010/batch"  # FastAPI endpoint
-    # BATCH_API_URL = "http://localhost:8010/batch"
     MAX_BACKOFF_SECONDS = 360  # 6 phút
     DEFAULT_BATCH_SIZE = 20
     DEFAULT_SLEEP_TIME = 10  # seconds
@@ -39,7 +38,6 @@ class FacebookAdsBaseReporter:
         self, 
         access_token: str, 
         api_version: str = API_VERSION,
-        batch_api_url: str = BATCH_API_URL,
         email: Optional[str] = None,
         progress_callback: Optional[Callable] = None,
         job_id: Optional[str] = None
@@ -50,14 +48,12 @@ class FacebookAdsBaseReporter:
         Args:
             access_token: Facebook access token
             api_version: Facebook API version (default: v24.0)
-            batch_api_url: URL của FastAPI batch endpoint
             email: Email để tracking (optional)
             progress_callback: Callback function để report progress (optional)
             job_id: Job ID để tracking log (optional)
         """
         self.access_token = access_token
         self.api_version = api_version
-        self.batch_api_url = batch_api_url
         self.email = email or "unknown@example.com"
         self.progress_callback = progress_callback
         self.job_id = job_id
@@ -165,56 +161,6 @@ class FacebookAdsBaseReporter:
         self._report_progress(message = "✓ Backoff hoàn tất, tiếp tục xử lý.")
     
     # ==================== BATCH API CALLS ====================
-    
-    def _send_batch_request(
-        self, 
-        relative_urls: List[str],
-        request_id: str = None
-    ) -> Dict[str, Any]:
-        """
-        Gửi batch request đến FastAPI endpoint.
-        
-        Returns:
-            {
-                "status": "success",
-                "results": [...],
-                "summary": {
-                    "success_count": int,
-                    "error_count": int,
-                    "rate_limits": {...}
-                }
-            }
-        """
-        logger.info(relative_urls)
-
-        if not request_id:
-            request_id = f"req_{int(time.time())}"
-        
-        payload = {
-            "access_token": self.access_token,
-            "relative_urls": relative_urls,
-            "email": self.email
-        }
-        
-        try:
-            response = requests.post(
-                self.batch_api_url,
-                json=payload,
-                timeout=300 # Timeout khi gọi batch API 5 phút
-            )
-            response.raise_for_status()
-            
-            data = response.json()
-            self.batch_count += 1
-            self.request_count += len(relative_urls)
-            
-            # print(data)
-            return data
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Batch request failed: {e}")
-            raise
-    
     def _execute_single_batch(
         self, 
         urls_for_batch: List[str],
@@ -232,7 +178,13 @@ class FacebookAdsBaseReporter:
             try:
                 self._report_progress(f"  → Gửi batch {batch_number} ({len(urls_for_batch)} requests)...")
                 
-                response_json = self._send_batch_request(urls_for_batch)
+                logger.info(urls_for_batch)
+                response_json = send_batch_request(
+                    relative_urls=urls_for_batch,
+                    access_token=self.access_token,
+                    api_version=self.api_version,
+                    timeout_sec=300
+                )
                 
                 if not response_json or "results" not in response_json:
                     raise Exception("Invalid response from batch server.")
