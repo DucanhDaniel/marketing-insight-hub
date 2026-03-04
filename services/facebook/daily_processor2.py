@@ -577,6 +577,10 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
         requests_for_wave = metadata_requests
         wave_count = 1
         
+        # Campaign daily report template does not need metadata
+        if template_name == "Campaign Daily Report":
+            return all_insights_data
+
         while requests_for_wave:
             logger.info(f"Processing metadata wave {wave_count}: {len(requests_for_wave)} requests")
 

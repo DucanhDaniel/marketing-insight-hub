@@ -200,7 +200,7 @@ class FacebookAdsBaseReporter:
             response = requests.post(
                 self.batch_api_url,
                 json=payload,
-                timeout=180 # Timeout khi gọi batch API 3 phút
+                timeout=300 # Timeout khi gọi batch API 5 phút
             )
             response.raise_for_status()
             
