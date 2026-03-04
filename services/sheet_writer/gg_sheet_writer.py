@@ -302,7 +302,7 @@ class GoogleSheetWriter:
             result.append(val)
         return result
 
-     def _create_image_formula(self, url: str) -> str:
+    def _create_image_formula(self, url: str) -> str:
         """Chuyển URL thành =IMAGE() formula"""
         if url and isinstance(url, str) and url.startswith(('http://', 'https://')):
             return f'=IMAGE("{url}")'
