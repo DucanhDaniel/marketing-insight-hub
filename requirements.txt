@@ -13,3 +13,4 @@ pymongo
 python-dotenv
 fastapi-cors
 gunicorn
+flower

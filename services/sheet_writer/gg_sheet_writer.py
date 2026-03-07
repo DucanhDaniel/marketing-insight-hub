@@ -430,7 +430,7 @@ class GoogleSheetWriter:
             return 0
 
         worksheet = self._get_or_create_worksheet(sheet_name)
-        has_image_col = 'product_img' or 'creative_thumbnail_url' in headers
+        has_image_col = 'product_img' in headers or 'creative_thumbnail_url' in headers
         value_input = 'USER_ENTERED' if has_image_col else 'RAW'
 
         total_rows = len(data_to_write)

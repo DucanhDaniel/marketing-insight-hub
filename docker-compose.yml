@@ -21,20 +21,31 @@ services:
       retries: 5
       start_period: 30s
     command: mongod --quiet
+    labels:
+      - "autoheal=true"
 
   # Dịch vụ Redis
   redis:
     image: redis:latest
     container_name: my-redis-server
+    restart: always
     # ports:
     #   - "6379:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   nginx:
     image: nginx:latest
     container_name: nginx_gatekeeper
+    restart: always
     ports:
       - "8011:8011" # Nhận request từ bên ngoài vào qua cổng 8011
     volumes:
@@ -42,11 +53,19 @@ services:
       - ./.htpasswd:/etc/nginx/.htpasswd:ro
     depends_on:
       - api
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8011/ || wget -q --spider http://localhost:8011/ || nginx -t || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Dịch vụ FastAPI API
   api:
     build: .
     container_name: tiktok_api_server
+    restart: always
     command: gunicorn -w 5 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8011
     volumes:
       - .:/app # Đồng bộ code local vào container, thay đổi code là server tự reload
@@ -56,11 +75,19 @@ services:
       - .env
     depends_on:
       - redis # Đảm bảo Redis khởi động trước API
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8011/docs')\" || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Dịch vụ Celery Worker
   worker:
     build: .
     container_name: celery_worker
+    restart: always
     # command: celery -A celery_worker.celery_app worker -P gevent --loglevel=info
     command: celery -A workers.tasks_modular.celery_app worker --loglevel=info
     volumes:
@@ -69,6 +96,46 @@ services:
       - .env
     depends_on:
       - redis
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: [ "CMD", "celery", "-A", "workers.tasks_modular.celery_app", "inspect", "ping" ]
+      interval: 45s
+      timeout: 15s
+      retries: 3
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: autoheal
+    restart: always
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # Dịch vụ Flower UI cho Celery
+  flower:
+    build: .
+    container_name: celery_flower
+    restart: always
+    # Lệnh cơ bản để chạy Flower.
+    # Đăng nhập bằng tài khoản admin/admin (có thể đổi)
+    command: celery -A workers.tasks_modular.celery_app flower --port=5555 --basic_auth=admin:admin
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - worker
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      # Kiểm tra trang chủ Flower
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5555/')\" || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   mongo-data:

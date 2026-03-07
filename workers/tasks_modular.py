@@ -154,7 +154,7 @@ def on_task_postrun(sender=None, task_id=None, state=None, retval=None, args=Non
 
 # ==================== CELERY TASK ====================
 
-@celery_app.task(soft_time_limit=1500, time_limit=1800)
+@celery_app.task(soft_time_limit=3300, time_limit=3600)
 def run_report_job(context: Dict[str, Any]):
     """
     Universal Celery task cho tất cả report types.

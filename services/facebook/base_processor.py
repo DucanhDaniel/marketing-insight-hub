@@ -30,7 +30,7 @@ class FacebookAdsBaseReporter:
     MAX_BACKOFF_SECONDS = 360  # 6 phút
     DEFAULT_BATCH_SIZE = 20
     DEFAULT_SLEEP_TIME = 10  # seconds
-    MAX_RETRIES = 3
+    MAX_RETRIES = 5
     MAX_PAGES_PER_RETRY = 10
     PLUS_BACKOFF_SEC = 3 # Thời gian đệm thêm khi backoff
     
