@@ -104,38 +104,14 @@ services:
       timeout: 15s
       retries: 3
 
-  autoheal:
+  autoheal_1:
     image: willfarrell/autoheal:latest
-    container_name: autoheal
+    container_name: autoheal_1
     restart: always
     environment:
-      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_CONTAINER_LABEL=autoheal_1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
-  # Dịch vụ Flower UI cho Celery
-  flower:
-    build: .
-    container_name: celery_flower
-    restart: always
-    # Lệnh cơ bản để chạy Flower.
-    # Đăng nhập bằng tài khoản admin/admin (có thể đổi)
-    command: celery -A workers.tasks_modular.celery_app flower --port=5555 --basic_auth=admin:admin
-    ports:
-      - "5555:5555"
-    env_file:
-      - .env
-    depends_on:
-      - redis
-      - worker
-    labels:
-      - "autoheal=true"
-    healthcheck:
-      # Kiểm tra trang chủ Flower
-      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5555/')\" || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   mongo-data:
