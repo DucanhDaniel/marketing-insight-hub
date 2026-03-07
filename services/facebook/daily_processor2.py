@@ -24,10 +24,67 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
     - Phase 3: Join by ad_id
     """
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, redis_client=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.page_map = {}
+        self.redis_client = redis_client
+        if self.redis_client is None:
+            try:
+                import redis
+                import os
+                self.redis_client = redis.Redis(
+                    host=os.getenv('REDIS_HOST', 'localhost'),
+                    port=6379,
+                    db=0,
+                    password=os.getenv('REDIS_PASSWORD'),
+                    decode_responses=True
+                )
+            except Exception as e:
+                logger.warning(f"Could not initialize Redis client, caching disabled: {e}")
+                self.redis_client = None
     
+    # ==================== CACHE MANAGEMENT ====================
+    
+    def _get_cache_key(self, level: str, object_id: str) -> str:
+        return f"fb_metadata:{level}:{object_id}"
+
+    def _get_metadata_from_cache(self, unique_ids: Set[str], level: str) -> Dict[str, Dict[str, Any]]:
+        """Fetch metadata from Redis cache using MGET for speed."""
+        if not self.redis_client or not unique_ids:
+            return {}
+        
+        try:
+            keys = [self._get_cache_key(level, obj_id) for obj_id in unique_ids]
+            cached_values = self.redis_client.mget(keys)
+            
+            cached_map = {}
+            for obj_id, val in zip(unique_ids, cached_values):
+                if val:
+                    try:
+                        cached_map[obj_id] = json.loads(val)
+                    except json.JSONDecodeError:
+                        pass
+            return cached_map
+        except Exception as e:
+            logger.warning(f"Error reading from Redis cache: {e}")
+            return {}
+
+    def _save_metadata_to_cache(self, metadata_map: Dict[str, Dict[str, Any]], level: str):
+        """Save fetched metadata to Redis cache with TTL."""
+        if not self.redis_client or not metadata_map:
+            return
+            
+        try:
+            pipeline = self.redis_client.pipeline()
+            # Cache for 24 hours
+            ttl = 86400
+            for obj_id, metadata in metadata_map.items():
+                key = self._get_cache_key(level, obj_id)
+                pipeline.set(key, json.dumps(metadata), ex=ttl)
+            pipeline.execute()
+        except Exception as e:
+            logger.warning(f"Error saving to Redis cache: {e}")
+
     # ==================== PHASE 1: INSIGHTS ====================
     
     def _create_insights_url(
@@ -566,30 +623,42 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
         logger.info(f"\n===== PHASE 2: FETCHING METADATA FOR {len(unique_ids)} {level.upper()}S =====")
         self._report_progress(f"Đang lấy metadata cho {len(unique_ids)} objects...", 60)
         
-        # Mở giới hạn batch size để lấy metadata nhanh hơn
-        self.DEFAULT_BATCH_SIZE = 35
-
-        metadata_requests = self._prepare_metadata_requests_by_ids(
-            unique_ids, level, template_config
-        )
-        
-        combined_metadata = {}
-        requests_for_wave = metadata_requests
-        wave_count = 1
-        
         # Campaign daily report template does not need metadata
         if template_name == "Campaign Daily Report":
             return all_insights_data
+            
+        # Mở giới hạn batch size để lấy metadata nhanh hơn
+        self.DEFAULT_BATCH_SIZE = 35
 
-        while requests_for_wave:
-            logger.info(f"Processing metadata wave {wave_count}: {len(requests_for_wave)} requests")
-
-            wave_result = self._execute_wave_with_retry(
-                requests_for_wave, selected_fields, wave_count
+        cached_metadata = self._get_metadata_from_cache(unique_ids, level)
+        missing_ids = unique_ids - set(cached_metadata.keys())
+        
+        logger.info(f"Cache hit: {len(cached_metadata)}/{len(unique_ids)}. Missing: {len(missing_ids)}")
+        
+        combined_metadata = {}
+        combined_metadata.update(cached_metadata)
+        
+        if missing_ids:
+            metadata_requests = self._prepare_metadata_requests_by_ids(
+                missing_ids, level, template_config
             )
-            combined_metadata.update(wave_result["metadata_map"])
-            requests_for_wave = wave_result["next_wave_requests"]
-            wave_count += 1
+            
+            new_metadata = {}
+            requests_for_wave = metadata_requests
+            wave_count = 1
+
+            while requests_for_wave:
+                logger.info(f"Processing metadata wave {wave_count}: {len(requests_for_wave)} requests")
+
+                wave_result = self._execute_wave_with_retry(
+                    requests_for_wave, selected_fields, wave_count
+                )
+                new_metadata.update(wave_result["metadata_map"])
+                requests_for_wave = wave_result["next_wave_requests"]
+                wave_count += 1
+                
+            self._save_metadata_to_cache(new_metadata, level)
+            combined_metadata.update(new_metadata)
         
         logger.info(f"✓ Phase 2 complete: {len(combined_metadata)} objects")
         

@@ -506,23 +506,20 @@ class GoogleSheetWriter:
 
         return len(chunk)
 
-
     def _write_chunk_append(self, worksheet, chunk, headers, apply_format: bool, value_input: str) -> int:
-        """
-        Append chunk vào sheet.
-        - Dùng headers được truyền vào (KHÔNG đọc lại từ sheet) để tránh lệch cột.
-        - apply_format=True chỉ ở chunk đầu tiên của append mode.
-        """
-        rows_to_append = [self._build_row(row, headers) for row in chunk]
+        
+        # ── Bước 1: Đọc tiêu đề hiện tại trên sheet ──────────────────────
+        def _get_existing_headers():
+            return worksheet.row_values(1)  # Row 1
+        existing_headers = self._retry_operation(_get_existing_headers, "Get existing headers")
 
-        def _append():
-            return worksheet.append_rows(rows_to_append, value_input_option=value_input)
-        self._retry_operation(_append, f"Append {len(rows_to_append)} rows")
+        if not existing_headers:
+            # ── Sheet trống: ghi header mới, format, rồi append ──────────
+            final_headers = headers  # Dùng nguyên headers truyền vào
+            col_order = list(range(len(headers)))  # Thứ tự 1-1
 
-        # Format + header chỉ chạy ở chunk đầu
-        if apply_format:
+            # Ghi header + format
             batch_requests = []
-
             if len(headers) > worksheet.col_count:
                 batch_requests.append({
                     "appendDimension": {
@@ -531,39 +528,100 @@ class GoogleSheetWriter:
                         "length": len(headers) - worksheet.col_count
                     }
                 })
+            cells = [{"userEnteredValue": {"stringValue": str(h)}} for h in headers]
+            batch_requests.append({
+                "updateCells": {
+                    "rows": [{"values": cells}],
+                    "fields": "userEnteredValue",
+                    "start": {"sheetId": worksheet.id, "rowIndex": 0, "columnIndex": 0}
+                }
+            })
+            batch_requests.append({
+                "repeatCell": {
+                    "range": {"sheetId": worksheet.id, "startRowIndex": 0, "endRowIndex": 1},
+                    "cell": {"userEnteredFormat": {"textFormat": {"bold": True}, "horizontalAlignment": "CENTER"}},
+                    "fields": "userEnteredFormat(textFormat,horizontalAlignment)"
+                }
+            })
+            batch_requests.extend(self._get_format_column_requests(worksheet.id, headers))
+            def _batch_new():
+                return self.spreadsheet.batch_update({"requests": batch_requests})
+            self._retry_operation(_batch_new, "Write headers for new sheet")
 
-            # Ghi header nếu sheet trống
-            def _get_first_cell():
-                return worksheet.cell(1, 1).value
-            first_cell = self._retry_operation(_get_first_cell, "Check header row")
+        else:
+            # ── Sheet đã có header: so sánh, thêm cột mới nếu thiếu ──────
+            final_headers = list(existing_headers)  # Tiêu đề thực tế trên sheet
+            new_cols_to_add = []
 
-            if not first_cell:
-                cells = [{"userEnteredValue": {"stringValue": str(h)}} for h in headers]
+            for h in headers:
+                if h not in final_headers:
+                    final_headers.append(h)
+                    new_cols_to_add.append(h)
+
+            if new_cols_to_add:
+                logger.info(f"Thêm {len(new_cols_to_add)} cột mới: {new_cols_to_add}")
+                start_col_idx = len(existing_headers)  # 0-based, vị trí bắt đầu thêm
+                batch_requests = []
+
+                # Mở rộng số cột nếu cần
+                needed_cols = len(final_headers)
+                if needed_cols > worksheet.col_count:
+                    batch_requests.append({
+                        "appendDimension": {
+                            "sheetId": worksheet.id,
+                            "dimension": "COLUMNS",
+                            "length": needed_cols - worksheet.col_count
+                        }
+                    })
+
+                # Ghi tiêu đề cho các cột mới
+                new_header_cells = [{"userEnteredValue": {"stringValue": str(h)}} for h in new_cols_to_add]
                 batch_requests.append({
                     "updateCells": {
-                        "rows": [{"values": cells}],
+                        "rows": [{"values": new_header_cells}],
                         "fields": "userEnteredValue",
-                        "start": {"sheetId": worksheet.id, "rowIndex": 0, "columnIndex": 0}
-                    }
-                })
-                batch_requests.append({
-                    "repeatCell": {
-                        "range": {"sheetId": worksheet.id, "startRowIndex": 0, "endRowIndex": 1},
-                        "cell": {
-                            "userEnteredFormat": {
-                                "textFormat": {"bold": True},
-                                "horizontalAlignment": "CENTER"
-                            }
-                        },
-                        "fields": "userEnteredFormat(textFormat,horizontalAlignment)"
+                        "start": {
+                            "sheetId": worksheet.id,
+                            "rowIndex": 0,
+                            "columnIndex": start_col_idx
+                        }
                     }
                 })
 
-            batch_requests.extend(self._get_format_column_requests(worksheet.id, headers))
+                # Format các cột mới theo đúng vị trí trong final_headers
+                batch_requests.extend(
+                    self._get_format_column_requests_subset(worksheet.id, final_headers, start_col_idx)
+                )
 
-            if batch_requests:
-                def _batch():
+                def _batch_add_cols():
                     return self.spreadsheet.batch_update({"requests": batch_requests})
-                self._retry_operation(_batch, f"Batch format append ({len(batch_requests)} rules)")
+                self._retry_operation(_batch_add_cols, f"Add {len(new_cols_to_add)} new columns")
+
+        # ── Bước 2: Build rows theo thứ tự final_headers (align đúng cột) ─
+        rows_to_append = []
+        for row in chunk:
+            aligned_row = []
+            for h in final_headers:
+                val = row.get(h, '')  # Cột không có trong data → để trống
+                if h in ('product_img', 'creative_thumbnail_url'):
+                    val = self._create_image_formula(val) if h == 'product_img' else val
+                else:
+                    val = self._cast_value(h, val)
+                aligned_row.append(val)
+            rows_to_append.append(aligned_row)
+
+        def _append():
+            return worksheet.append_rows(rows_to_append, value_input_option=value_input)
+        self._retry_operation(_append, f"Append {len(rows_to_append)} rows")
 
         return len(rows_to_append)
+
+    def _get_format_column_requests_subset(self, sheet_id: int, headers: list, start_idx: int) -> list:
+        """Format chỉ các cột từ start_idx trở đi."""
+        all_requests = self._get_format_column_requests(sheet_id, headers)
+        # _get_format_column_requests dùng enumerate(headers) nên index đã đúng
+        # Chỉ lấy các request có startColumnIndex >= start_idx
+        return [
+            r for r in all_requests
+            if r["repeatCell"]["range"]["startColumnIndex"] >= start_idx
+        ]
