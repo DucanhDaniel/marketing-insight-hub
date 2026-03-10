@@ -54,7 +54,7 @@ class FacebookAdsWorker(BaseReportWorker):
         Override run to handle Facebook-specific flow.
         Facebook reporter returns flattened data directly.
         """
-        logger.info(f"[Job {self.job_id}] Starting Facebook Daily worker")
+        logger.info(f"[Job {self.job_id}] Starting Facebook Ads Worker")
         self.currency_service.load_config()
         
         reporter = None
