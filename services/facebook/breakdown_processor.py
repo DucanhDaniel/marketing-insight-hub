@@ -321,7 +321,13 @@ class FacebookBreakdownReporter(FacebookAdsBaseReporter):
             logger.info(f"\n➤ Retry batch of {len(current_batch)} items")
             
             try:
-                response_json = self._send_batch_request(batch_urls)  
+                from services.facebook.utils.batch_sender import send_batch_request
+                response_json = send_batch_request(
+                    relative_urls=batch_urls,
+                    access_token=self.access_token,
+                    api_version=self.api_version,
+                    timeout_sec=300
+                )  
                 
                 if not response_json or "results" not in response_json:
                     logger.error("Batch request failed")

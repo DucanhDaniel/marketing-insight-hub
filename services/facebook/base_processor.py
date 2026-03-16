@@ -27,7 +27,7 @@ class FacebookAdsBaseReporter:
     
     # Constants
     API_VERSION = "v24.0"
-    MAX_BACKOFF_SECONDS = 360  # 6 phút
+    MAX_BACKOFF_SECONDS = 900  
     DEFAULT_BATCH_SIZE = 20
     DEFAULT_SLEEP_TIME = 10  # seconds
     MAX_RETRIES = 5
@@ -174,6 +174,31 @@ class FacebookAdsBaseReporter:
         Returns:
             List of responses với metadata attached
         """
+        # --- Rate limit logic: 100 calls / 20s ---
+        num_requests = len(urls_for_batch)
+        now = time.time()
+        
+        if not hasattr(self, 'request_timestamps'):
+            self.request_timestamps = []
+            
+        # Xóa các timestamps cũ hơn 20s
+        self.request_timestamps = [ts for ts in self.request_timestamps if now - ts < 20]
+        
+        # Kiểm tra xem nếu thêm num_requests có vượt quá 100 không
+        if len(self.request_timestamps) + num_requests > 100:
+            excess = len(self.request_timestamps) + num_requests - 100
+            # Cần chờ cho đến khi excess requests trôi qua mốc 20s
+            wait_time = 20 - (now - self.request_timestamps[excess - 1])
+            if wait_time > 0:
+                logger.info(f"Rate limiting: Chờ {wait_time:.2f}s để đảm bảo giới hạn 100 calls/20s")
+                time.sleep(wait_time)
+                now = time.time()
+                self.request_timestamps = [ts for ts in self.request_timestamps if now - ts < 20]
+                
+        # Cập nhật timestamps cho các requests chuẩn bị gửi
+        self.request_timestamps.extend([now] * num_requests)
+        # -----------------------------------------
+
         for attempt in range(1, self.MAX_RETRIES + 1):
             try:
                 self._report_progress(f"  → Gửi batch {batch_number} ({len(urls_for_batch)} requests)...")
