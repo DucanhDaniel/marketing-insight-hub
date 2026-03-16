@@ -49,7 +49,10 @@ class GoogleSheetWriter:
         client = gspread.authorize(creds)
 
         try:
-            self.spreadsheet = client.open_by_key(spreadsheet_id)
+            def _open():
+                return client.open_by_key(spreadsheet_id)
+            
+            self.spreadsheet = self._retry_operation(_open, "Open spreadsheet key")
             logger.info(f"Đã mở thành công spreadsheet: '{self.spreadsheet.title}'")
         except Exception as e:
             raise Exception(f"Lỗi khi mở spreadsheet {spreadsheet_id}: {str(e)}") from e
