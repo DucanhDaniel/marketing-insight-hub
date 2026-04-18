@@ -1,248 +1,4 @@
 
-CONVERSION_METRICS_MAP = {
-
- "New Messaging Connections (N)": { 
-   "api_field": "actions:onsite_conversion.messaging_first_reply",
-   "parent_field": "actions",
- },
- "Cost per New Messaging (N)": { 
-   "api_field": "cost_per_action_type:onsite_conversion.messaging_first_reply",
-   "parent_field": "cost_per_action_type",
- },
-
- "New Messaging Connections": { 
-   "api_field": "actions:onsite_conversion.messaging_conversation_started_7d",
-   "parent_field": "actions",
- },
- "Cost per New Messaging": {
-   "api_field": "cost_per_action_type:onsite_conversion.messaging_conversation_started_7d",
-   "parent_field": "cost_per_action_type",
- },
-
- "Leads": {
-   "api_field": "actions:lead",
-   "parent_field": "actions",
- },
- "Cost Leads": {
-   "api_field": "cost_per_action_type:lead",
-   "parent_field": "cost_per_action_type",
- },
- "Purchases": {
-   "api_field": "actions:omni_purchase",
-   "parent_field": "actions",
- },
- "Cost Purchases": {
-   "api_field": "cost_per_action_type:omni_purchase",
-   "parent_field": "cost_per_action_type",
- },
- "Purchase Value": {
-   "api_field": "action_values:omni_purchase",
-   "parent_field": "action_values",
- },
- "Purchase ROAS": {
-   "api_field": "purchase_roas",
-   "parent_field": "purchase_roas",
- },
- "Website Purchases": {
-   "api_field": "actions:offsite_conversion.fb_pixel_purchase",
-   "parent_field": "actions",
- },
- "On-Facebook Purchases": {
-   "api_field": "actions:onsite_conversion.purchase",
-   "parent_field": "actions",
- },
-  "Post comments": {
-    "api_field": "actions:comment",
-    "parent_field": "actions",
-  },
-  "Cost per post comment": {
-    "api_field": "cost_per_action_type:comment",
-    "parent_field": "cost_per_action_type",
-  },
- "Link clicks": {
-   "api_field": "actions:link_click",
-   "parent_field": "actions",
- },
- "Cost per unique link click": {
-   "api_field": "cost_per_unique_inline_link_click",
-   "parent_field": "cost_per_unique_inline_link_click", 
- },
- "Leads Conversion Value": {
-   "api_field": "action_values:lead",
-   "parent_field": "action_values",
- },
- "Landing page views": {
-   "api_field": "actions:landing_page_view",
-   "parent_field": "actions",
- },
- "Cost per landing page view": {
-   "api_field": "cost_per_action_type:landing_page_view",
-   "parent_field": "cost_per_action_type",
- },
- "Adds to cart": {
-   "api_field": "actions:omni_add_to_cart",
-   "parent_field": "actions",
- },
- "Cost per add to cart": {
-   "api_field": "cost_per_action_type:omni_add_to_cart",
-   "parent_field": "cost_per_action_type",
- },
- "Checkouts Initiated": {
-   "api_field": "actions:omni_initiated_checkout",
-   "parent_field": "actions",
- },
- "Cost per checkout initiated": {
-   "api_field": "cost_per_action_type:omni_initiated_checkout",
-   "parent_field": "cost_per_action_type",
- }, 
-  "Hoàn tất đăng ký": {
-    "api_field": "actions:complete_registration",
-    "parent_field": "actions",
-  },
-  "Chi phí / Hoàn tất đăng ký": {
-    "api_field": "cost_per_action_type:complete_registration",
-    "parent_field": "cost_per_action_type",
-  },
-  "ThruPlay": {
-    "api_field": "actions:video_thruplay",
-    "parent_field": "actions",
-  },
-  "Chi phí / ThruPlay": {
-    "api_field": "cost_per_action_type:video_thruplay",
-    "parent_field": "cost_per_action_type",
-  },
-  "Page Likes": {
-    "api_field": "actions:like",
-    "parent_field": "actions",
-  },
-  "Cost Page Likes": {
-    "api_field": "cost_per_action_type:like",
-    "parent_field": "cost_per_action_type",
-  },
-
-  "Page Follows": {
-    "api_field": "actions:page_follow",
-    "parent_field": "actions",
-  },
-  "Cost Page Follows": {
-    "api_field": "cost_per_action_type:page_follow",
-    "parent_field": "cost_per_action_type",
-  },
-  
-"Video Views (3s)": {
-    "api_field": "actions", 
-    "parent_field": "actions", 
-    "action_type": "video_view"
-  },
-  
-  "Video Views (10s)": {
-    "api_field": "actions",
-    "parent_field": "actions",
-    "action_type": "video_view_10s" 
-  },
-
-  "ThruPlay": {
-    "api_field": "video_thruplay_watched_actions",
-    "parent_field": "video_thruplay_watched_actions", 
-    "action_type": "video_view"
-  },
-  "Video ThruPlay": {
-    "api_field": "video_thruplay_watched_actions",
-    "parent_field": "video_thruplay_watched_actions",
-    "action_type": "video_view"
-  },
-  "Chi phí / ThruPlay": {
-    "api_field": "cost_per_thruplay",
-    "parent_field": "cost_per_thruplay",
-    "action_type": "video_view"
-  },
-  "Video Views (30s)": {
-    "api_field": "video_30_sec_watched_actions",
-    "parent_field": "video_30_sec_watched_actions",
-    "action_type": "video_view"
-  },
-
-  "Video Views (25%)": {
-    "api_field": "video_p25_watched_actions",
-    "parent_field": "video_p25_watched_actions",
-    "action_type": "video_view"
-  },
-  "Video Views (50%)": {
-    "api_field": "video_p50_watched_actions",
-    "parent_field": "video_p50_watched_actions",
-    "action_type": "video_view"
-  },
-  "Video Views (75%)": {
-    "api_field": "video_p75_watched_actions",
-    "parent_field": "video_p75_watched_actions",
-    "action_type": "video_view"
-  },
-  "Video Views (95%)": {
-    "api_field": "video_p95_watched_actions",
-    "parent_field": "video_p95_watched_actions", 
-    "action_type": "video_view"
-  },
-  "Video Views (100%)": {
-    "api_field": "video_p100_watched_actions",
-    "parent_field": "video_p100_watched_actions",
-    "action_type": "video_view"
-  },
-
-  "Video Plays": {
-    "api_field": "video_play_actions",
-    "parent_field": "video_play_actions",
-    "action_type": "video_view"
-  },
-  "Avg Time Watched": {
-    "api_field": "video_avg_time_watched_actions",
-    "parent_field": "video_avg_time_watched_actions",
-    "action_type": "video_view"
-  },
-  "Messaging conversations started": { "api_field": "actions:onsite_conversion.messaging_conversation_started_7d", "parent_field": "actions", "action_type": "onsite_conversion.messaging_conversation_started_7d" },
-  "New messaging contacts": { "api_field": "actions:onsite_conversion.messaging_first_reply", "parent_field": "actions", "action_type": "onsite_conversion.messaging_first_reply" },
-  "Cost per messaging conversation started": { "api_field": "cost_per_action_type:onsite_conversion.messaging_conversation_started_7d", "parent_field": "cost_per_action_type", "action_type": "onsite_conversion.messaging_conversation_started_7d" },
-
-  "Inline link clicks": { "api_field": "inline_link_clicks" },
-  "Unique inline link clicks": { "api_field": "unique_inline_link_clicks" },
-
-  "outbound_clicks": { 
-    "api_field": "outbound_clicks", 
-    "parent_field": "outbound_clicks", 
-    "action_type": "outbound_click" 
-  },
-  "unique_outbound_clicks": { 
-    "api_field": "unique_outbound_clicks", 
-    "parent_field": "unique_outbound_clicks", 
-    "action_type": "outbound_click" 
-  },
-  "outbound_click_ctr": { 
-    "api_field": "outbound_clicks_ctr", 
-    "parent_field": "outbound_clicks_ctr", 
-    "action_type": "outbound_click" 
-  },
-
-  "Inline link CTR": { "api_field": "inline_link_click_ctr" },
-
-  "Post saves": { "api_field": "actions:post_save", "parent_field": "actions", "action_type": "post_save" },
-  "Post shares": { "api_field": "actions:post", "parent_field": "actions", "action_type": "post" },
-  
-  "Photo views": {
-    "api_field": "actions:photo_view",
-    "parent_field": "actions",
-    "action_type": "photo_view"
-  },
-  
-  "Post engagements": {
-    "api_field": "actions:post_engagement",
-    "parent_field": "actions",
-    "action_type": "post_engagement"
-  },
-  "Post reactions": {
-    "api_field": "actions:post_reaction",
-    "parent_field": "actions",
-    "action_type": "post_reaction"
-  }
-}
 
 FACEBOOK_REPORT_TEMPLATES_STRUCTURE = [
  {
@@ -539,6 +295,7 @@ FACEBOOK_REPORT_TEMPLATES_STRUCTURE = [
          "api_params": {
            "level": "campaign",
            "breakdowns": "region",
+           "time_increment": 1,
          },
          "selectable_fields": {
            "1.Thông tin Chiến dịch": [
@@ -1379,6 +1136,22 @@ EFFECTIVE_STATUS_FILTERS = {
     "IN_PROCESS",
     "PENDING_BILLING_INFO",
     "ARCHIVED",
-    # "DELETED"
     ]
 }
+
+def get_all_selectable_fields(template_name: str) -> list:
+    """
+    Tìm template theo tên và trả về danh sách tất cả các field phẳng trong selectable_fields.
+    """
+    for group in FACEBOOK_REPORT_TEMPLATES_STRUCTURE:
+        for template in group.get("templates", []):
+            if template.get("name") == template_name:
+                selectable = template.get("config", {}).get("selectable_fields", {})
+                all_fields = []
+                for fields_list in selectable.values():
+                    if isinstance(fields_list, list):
+                        all_fields.extend(fields_list)
+                # Loại bỏ trùng lặp giữ nguyên thứ tự
+                seen = set()
+                return [x for x in all_fields if not (x in seen or seen.add(x))]
+    return []

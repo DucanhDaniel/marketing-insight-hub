@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 from .base_processor import FacebookAdsBaseReporter
 import logging
 import json, time
-from .constant import CONVERSION_METRICS_MAP, EFFECTIVE_STATUS_FILTERS
+from .constant import EFFECTIVE_STATUS_FILTERS
 
 
 logger = logging.getLogger("FacebookPerformanceReport")
@@ -48,30 +48,16 @@ class FacebookPerformanceReporter(FacebookAdsBaseReporter):
         final_insight_fields = set(["account_id"])
         needs_creative_fields = False
         
+        # ELT MODE: Lấy TOÀN BỘ các trường insight mà template hỗ trợ + các raw containers
+        final_insight_fields.update(template_config.get("insight_fields", []))
+        final_insight_fields.update(["actions", "action_values", "cost_per_action_type", "purchase_roas"])
+
         # Process selected fields
         for field in selected_fields:
             if field.startswith('creative_') or field == 'page_name' or field == 'actor_id':
                 needs_creative_fields = True
             
-            if field in CONVERSION_METRICS_MAP:
-                # Parse api_field để lấy parent field
-                api_field = CONVERSION_METRICS_MAP[field]["api_field"]
-                if api_field.startswith("actions:"):
-                    final_insight_fields.add("actions")
-                elif api_field.startswith("action_values:"):
-                    final_insight_fields.add("action_values")
-                elif api_field.startswith("cost_per_action_type:"):
-                    final_insight_fields.add("cost_per_action_type")
-                elif api_field == "purchase_roas":
-                    final_insight_fields.add("purchase_roas")
-                else:
-                    # Video metrics, etc.
-                    parent_field = CONVERSION_METRICS_MAP[field].get("parent_field")
-                    if parent_field:
-                        final_insight_fields.add(parent_field)
-                    else:
-                        final_insight_fields.add(api_field)
-            elif field in ["campaign_name", "campaign_id"]:
+            if field in ["campaign_name", "campaign_id"]:
                 final_object_fields.add("campaign{name,id}")
             elif field == "objective":
                 if level == "campaign":

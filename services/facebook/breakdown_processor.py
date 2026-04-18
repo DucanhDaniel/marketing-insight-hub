@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional
 from services.facebook.base_processor import FacebookAdsBaseReporter
 import logging
 import json, time
-from services.facebook.constant import CONVERSION_METRICS_MAP
+from services.facebook.constant import FACEBOOK_REPORT_TEMPLATES_STRUCTURE
 from .helper import write_to_file
 
 
@@ -73,27 +73,13 @@ class FacebookBreakdownReporter(FacebookAdsBaseReporter):
             fields_for_api.add("date_start")
             fields_for_api.add("date_stop")
         
+        # ELT MODE: Luôn lấy các trường raw containers + toàn bộ insight_fields của template
+        fields_for_api.update(template_config.get("insight_fields", []))
+        fields_for_api.update(["actions", "action_values", "cost_per_action_type", "purchase_roas"])
+
         # Process selected fields
         for field in selected_fields:
-            if field in CONVERSION_METRICS_MAP:
-                # Parse api_field to get parent field
-                api_field = CONVERSION_METRICS_MAP[field]["api_field"]
-                if api_field.startswith("actions:"):
-                    fields_for_api.add("actions")
-                elif api_field.startswith("action_values:"):
-                    fields_for_api.add("action_values")
-                elif api_field.startswith("cost_per_action_type:"):
-                    fields_for_api.add("cost_per_action_type")
-                elif api_field == "purchase_roas":
-                    fields_for_api.add("purchase_roas")
-                else:
-                    # Video metrics, etc.
-                    parent_field = CONVERSION_METRICS_MAP[field].get("parent_field")
-                    if parent_field:
-                        fields_for_api.add(parent_field)
-                    else:
-                        fields_for_api.add(api_field)
-            elif field in template_config.get("insight_fields", []):
+            if field in template_config.get("insight_fields", []):
                 fields_for_api.add(field)
         
         # Format breakdowns param

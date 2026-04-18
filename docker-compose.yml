@@ -5,8 +5,8 @@ services:
     image: mongo:latest
     container_name: my-mongo-db
     restart: always
-    # ports:
-    #   - "127.0.0.1:27018:27017"
+    ports:
+      - "27018:27017" # Ánh xạ ra cổng 27018 ở máy thật
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
@@ -29,8 +29,8 @@ services:
     image: redis:latest
     container_name: my-redis-server
     restart: always
-    # ports:
-    #   - "6379:6379"
+    ports:
+      - "6379:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
@@ -104,15 +104,31 @@ services:
       timeout: 15s
       retries: 3
 
-  autoheal_1:
-    image: willfarrell/autoheal:latest
-    container_name: autoheal_1
+  # Dịch vụ ClickHouse
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse-server
     restart: always
+    ports:
+      - "8123:8123"
+      - "9000:9000"
     environment:
-      - AUTOHEAL_CONTAINER_LABEL=autoheal_1
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-default}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-}
+      - CLICKHOUSE_DB=${CLICKHOUSE_DB:-marketing_raw}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-logs:/var/log/clickhouse-server
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "localhost:8123/ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "autoheal=true"
 
 volumes:
   mongo-data:
   redis-data:
+  clickhouse-data:
+  clickhouse-logs:

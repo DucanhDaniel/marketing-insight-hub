@@ -7,11 +7,8 @@ import logging
 from typing import Dict, Any, List, Callable, Optional
 from datetime import datetime, date, timedelta, timezone
 from abc import ABC, abstractmethod
-from services.sheet_writer.gg_sheet_writer import GoogleSheetWriter
-import os
-from services.currency.exchange_rate_service import CurrencyExchangeService
-
-CREDENTIALS_PATH = os.getenv('GOOGLE_CREDENTIALS_PATH', 'credentials.json')
+from services.database.clickhouse_client import ClickHouseClient
+from services.clickhouse_writer.clickhouse_writer import ClickHouseWriter
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +38,8 @@ class BaseReportWorker(ABC):
         self.task_id = context["task_id"]
         self.task_type = context["task_type"]
         
-        self.spreadsheet_id = context["spreadsheet_id"]
-        self.sheet_writer = GoogleSheetWriter(CREDENTIALS_PATH, self.spreadsheet_id)
-        
-        # Initialize Currency Exchange Service
-        self.currency_service = CurrencyExchangeService(self.spreadsheet_id)
+        self.ch_client = ClickHouseClient()
+        self.clickhouse_writer = ClickHouseWriter(self.ch_client)
         
         # Stats
         self.api_usage = {}
@@ -247,23 +241,18 @@ class BaseReportWorker(ABC):
             api_usage=self.api_usage
         )
     
-    def _write_to_sheet(self, data: List[Dict]) -> str:
-        """Write data to Google Sheet"""
+    def _load_to_clickhouse(self, table_name: str, data: List[Dict]) -> str:
+        """Load raw data to ClickHouse"""
         if not data:
-            return "No data to write"
+            return "No data to load"
         
-        from utils.utils import write_data_to_sheet
-        
-
-        logger.info(f"[Job {self.job_id}] Calling write_data_to_sheet with context keys: {list(self.context.keys())}")
-        
-        return write_data_to_sheet(
+        rows_loaded = self.clickhouse_writer.write_raw_data(
+            table_name=table_name,
             job_id=self.job_id,
-            spreadsheet_id=self.context["spreadsheet_id"],
-            context=self.context,
-            flattened_data=data,
-            writer=self.sheet_writer
+            data=data
         )
+        
+        return f"Successfully loaded {rows_loaded} rows to {table_name}"
     
     def run(self) -> Dict[str, Any]:
         """
@@ -292,50 +281,29 @@ class BaseReportWorker(ABC):
                 self.context["end_date"]
             )
             
-            self._send_progress("RUNNING", "Checking cache...", 10)
-            
-            cached_data, chunks_to_fetch = self._load_cached_data(
-                date_chunks,
-                accurate_data_date
-            )
-            
-            # Step 4: Fetch from API if needed
+            # Step 4: Fetch from API
+            # For ELT, we focus on API data. Cache lookup is bypassed for now to ensure raw data flow.
             api_raw_data = []
-            if chunks_to_fetch:
-                self._send_progress(
-                    "RUNNING",
-                    f"Fetching {len(chunks_to_fetch)} chunks from API...",
-                    20
-                )
-                api_raw_data = reporter.get_data(chunks_to_fetch)
-            else:
-                logger.info("All data available in cache")
+            self._send_progress(
+                "RUNNING",
+                f"Fetching data from API...",
+                20
+            )
+            api_raw_data = reporter.get_data(date_chunks)
             
             # Step 5: Check cancellation
             self._check_cancellation()
             
-            # Step 6: Flatten API data
-            flattened_api_data = []
-            if api_raw_data:
-                self._send_progress("RUNNING", "Processing API data...", 70)
-                flattened_api_data = self._flatten_data(api_raw_data, self.context)
-                self.api_rows = len(flattened_api_data)
+            final_data = api_raw_data
             
-            # Step 7: Save to cache
-            if flattened_api_data:
-                self._send_progress("RUNNING", "Saving to cache...", 85)
-                self._save_to_cache(flattened_api_data)
+            # Step 8: Load to ClickHouse
+            # Table name should be defined by template or subclass
+            table_name = f"raw_fb_{self.context.get('template_name', 'unknown').lower().replace(' ', '_')}"
             
-            # Step 8: Combine data and write to sheet
-            final_data = cached_data + flattened_api_data
-            
-            # Apply Currency Exchange (Account-level multiplier)
-
-            
-            message = "No data to write"
+            message = "No data to load"
             if final_data:
-                self._send_progress("RUNNING", "Writing to sheet...", 95)
-                message = self._write_to_sheet(final_data)
+                self._send_progress("RUNNING", f"Loading to ClickHouse ({table_name})...", 95)
+                message = self._load_to_clickhouse(table_name, final_data)
             
             # Step 9: Get API usage
             if hasattr(reporter, 'api_usage'):
@@ -343,7 +311,7 @@ class BaseReportWorker(ABC):
             
             logger.info(
                 f"[Job {self.job_id}] Completed: "
-                f"{self.cached_rows} cached + {self.api_rows} API = {len(final_data)} total rows"
+                f"{len(final_data)} total rows loaded to {table_name}"
             )
             
             return {
@@ -351,8 +319,6 @@ class BaseReportWorker(ABC):
                 "message": message,
                 "api_usage": self.api_usage,
                 "stats": {
-                    "cached_rows": self.cached_rows,
-                    "api_rows": self.api_rows,
                     "total_rows": len(final_data)
                 }
             }

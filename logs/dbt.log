@@ -1,0 +1,70 @@
+[0m23:07:35.560076 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000231126041A0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023110388CD0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023114597C50>]}
+
+
+============================== 23:07:35.692967 | a265fe00-9faf-4609-91b2-9d7814af236c ==============================
+[0m23:07:35.692967 [info ] [MainThread]: Running with dbt=1.11.8
+[0m23:07:35.694157 [debug] [MainThread]: running dbt with arguments {'static_parser': 'True', 'no_print': 'None', 'version_check': 'True', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'printer_width': '80', 'write_json': 'True', 'empty': 'None', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'log_format': 'default', 'debug': 'False', 'fail_fast': 'False', 'profiles_dir': 'C:\\Users\\Duc Anh\\.dbt', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'invocation_command': 'dbt init transform', 'use_colors': 'True', 'indirect_selection': 'eager', 'use_experimental_parser': 'False', 'log_path': 'logs'}
+[0m23:07:36.031755 [debug] [MainThread]: Starter project path: D:\projects\marketing-insight-hub\marketing-insight-hub\.venv\Lib\site-packages\dbt\include\starter_project
+[0m23:07:36.055136 [info ] [MainThread]: 
+Your new dbt project "transform" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m23:07:36.055982 [info ] [MainThread]: Setting up your profile.
+[0m23:07:43.262557 [info ] [MainThread]: No sample profile found for clickhouse.
+[0m23:07:43.263820 [debug] [MainThread]: Command `dbt init` succeeded at 23:07:43.263675 after 7.83 seconds
+[0m23:07:43.264199 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000023114681A70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002311467B1D0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000231146DDAE0>]}
+[0m23:07:43.264541 [debug] [MainThread]: Flushing usage events
+[0m23:07:44.466725 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m23:10:08.960317 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000204FB04D940>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000204F7EBC050>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000204FD0EBC50>]}
+
+
+============================== 23:10:08.970704 | 7cd7dc84-c2f0-47aa-aab5-40bbb015fd87 ==============================
+[0m23:10:08.970704 [info ] [MainThread]: Running with dbt=1.11.8
+[0m23:10:08.971943 [debug] [MainThread]: running dbt with arguments {'version_check': 'True', 'no_print': 'None', 'static_parser': 'True', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'printer_width': '80', 'write_json': 'True', 'empty': 'None', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'log_format': 'default', 'profiles_dir': '.', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'indirect_selection': 'eager', 'use_colors': 'True', 'invocation_command': 'dbt debug --profiles-dir .', 'use_experimental_parser': 'False', 'log_path': 'logs'}
+[0m23:10:09.167475 [info ] [MainThread]: dbt version: 1.11.8
+[0m23:10:09.168205 [info ] [MainThread]: python version: 3.13.13
+[0m23:10:09.168701 [info ] [MainThread]: python path: D:\projects\marketing-insight-hub\marketing-insight-hub\.venv\Scripts\python.exe
+[0m23:10:09.169265 [info ] [MainThread]: os info: Windows-11-10.0.26200-SP0
+[0m23:10:09.342438 [info ] [MainThread]: Using profiles dir at .
+[0m23:10:09.343247 [info ] [MainThread]: Using profiles.yml file at .\profiles.yml
+[0m23:10:09.343795 [info ] [MainThread]: Using dbt_project.yml file at D:\projects\marketing-insight-hub\marketing-insight-hub\dbt_project.yml
+[0m23:10:09.344488 [info ] [MainThread]: Configuration:
+[0m23:10:09.345069 [info ] [MainThread]:   profiles.yml file [[31mERROR invalid[0m]
+[0m23:10:09.345732 [info ] [MainThread]:   dbt_project.yml file [[31mERROR not found[0m]
+[0m23:10:09.346233 [info ] [MainThread]: Required dependencies:
+[0m23:10:09.346705 [debug] [MainThread]: Executing "git --help"
+[0m23:10:09.416056 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]\n           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]\n           [--config-env=<name>=<envvar>] <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone     Clone a repository into a new directory\n   init      Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add       Add file contents to the index\n   mv        Move or rename a file, a directory, or a symlink\n   restore   Restore working tree files\n   rm        Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect    Use binary search to find the commit that introduced a bug\n   diff      Show changes between commits, commit and working tree, etc\n   grep      Print lines matching a pattern\n   log       Show commit logs\n   show      Show various types of objects\n   status    Show the working tree status\n\ngrow, mark and tweak your common history\n   branch    List, create, or delete branches\n   commit    Record changes to the repository\n   merge     Join two or more development histories together\n   rebase    Reapply commits on top of another base tip\n   reset     Reset current HEAD to the specified state\n   switch    Switch branches\n   tag       Create, list, delete or verify a tag object signed with GPG\n\ncollaborate (see also: git help workflows)\n   fetch     Download objects and refs from another repository\n   pull      Fetch from and integrate with another repository or a local branch\n   push      Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m23:10:09.416836 [debug] [MainThread]: STDERR: "b''"
+[0m23:10:09.417731 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m23:10:09.418515 [info ] [MainThread]: Connection test skipped since no profile was found
+[0m23:10:09.419184 [info ] [MainThread]: [31m2 checks failed:[0m
+[0m23:10:09.419822 [info ] [MainThread]: Could not load dbt_project.yml
+Profile loading failed for the following reason:
+Runtime Error
+  Credentials in profile "transform", target "dev" invalid: Runtime Error
+        schema: silver 
+        database: marketing_raw 
+        cluster: None 
+    On Clickhouse, database must be omitted or have the same value as schema.
+
+
+[0m23:10:09.420596 [info ] [MainThread]: Project loading failed for the following reason:
+ project path <D:\projects\marketing-insight-hub\marketing-insight-hub\dbt_project.yml> not found
+
+[0m23:10:09.422186 [debug] [MainThread]: Command `dbt debug` failed at 23:10:09.422005 after 0.57 seconds
+[0m23:10:09.422816 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000204FD1850F0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000204FB999490>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000204FD19DE10>]}
+[0m23:10:09.423278 [debug] [MainThread]: Flushing usage events
+[0m23:10:10.847088 [debug] [MainThread]: An error was encountered while trying to flush usage events

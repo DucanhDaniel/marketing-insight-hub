@@ -1,0 +1,13 @@
+# transform/profiles.yml
+transform:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: localhost
+      port: 8123
+      user: "{{ env_var('CLICKHOUSE_USER', 'default') }}"
+      password: "{{ env_var('CLICKHOUSE_PASSWORD', '') }}"
+      schema: marketing_analytics
+      secure: False
+      verify: False

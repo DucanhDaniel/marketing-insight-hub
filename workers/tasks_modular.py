@@ -5,6 +5,9 @@ Hỗ trợ cả TikTok GMV và Facebook Ads reports thông qua Worker Factory
 
 import logging
 import redis
+from dotenv import load_dotenv
+load_dotenv()
+
 from celery import Celery
 from celery.signals import task_prerun, task_postrun
 from typing import Dict, Any
@@ -14,15 +17,13 @@ import io
 
 from .worker_factory import WorkerFactory
 from services.exceptions import TaskCancelledException 
-from services.sheet_writer.gg_sheet_writer import GoogleSheetWriter
 from services.database.mongo_client import MongoDbClient
-from utils.utils import write_data_to_sheet
 
 # ==================== CONFIG ====================
 
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 REDIS_HOST = os.getenv('REDIS_HOST')
-CREDENTIALS_PATH = os.getenv('GOOGLE_CREDENTIALS_PATH', 'credentials.json')
+# REDIS_HOST=redis
 
 # ==================== CELERY APP ====================
 
@@ -156,34 +157,11 @@ def on_task_postrun(sender=None, task_id=None, state=None, retval=None, args=Non
 
 @celery_app.task(soft_time_limit=3300, time_limit=3600)
 def run_report_job(context: Dict[str, Any]):
-    """
-    Universal Celery task cho tất cả report types.
-    Sử dụng WorkerFactory để delegate cho worker phù hợp.
-    
-    Args:
-        context: Job context chứa:
-            - job_id: Unique job identifier
-            - task_id: Task ID cho progress tracking
-            - task_type: Loại report ("creative", "product", "facebook_daily", etc.)
-            - spreadsheet_id: Google Sheet ID
-            - start_date, end_date: Date range
-            - Các fields khác tùy theo task_type
-            
-    Returns:
-        Dict containing:
-            - status: "SUCCESS" or "FAILED"
-            - message: Human-readable message
-            - api_usage: API usage statistics
-    """
     job_id = context["job_id"]
     task_id = context["task_id"]
     task_type = context["task_type"]
-    spreadsheet_id = context["spreadsheet_id"]
     
     logger.info(f"[Job {job_id}] Starting Celery task for type: {task_type}")
-    
-    # Khởi tạo sheet writer
-    writer = GoogleSheetWriter(CREDENTIALS_PATH, spreadsheet_id, redis_client=redis_client)
 
     # --- SETUP LOG CAPTURE ---
     log_capture_string = io.StringIO()
@@ -199,9 +177,6 @@ def run_report_job(context: Dict[str, Any]):
         try:
             log_contents = log_capture_string.getvalue()
             if db_client:
-
-                print("Saving logs to DB...JobId: ", job_id)
-
                 db_client.db.task_logs.update_one(
                     {"job_id": job_id},
                     {"$set": {"full_logs": log_contents}}
@@ -209,15 +184,14 @@ def run_report_job(context: Dict[str, Any]):
         except Exception as e:
             logger.error(f"[Job {job_id}] Failed to save logs to DB: {e}")
 
-    
     def send_progress_update(status: str, message: str, progress: int = 0, api_usage: Dict = None):
-        """Callback function để ghi progress vào sheet"""
+        """Callback function để ghi progress vào database (ELT Mode)"""
         if status == "STOPPED":
             return
         try:
             save_logs_to_db()
             
-            # Save API usage to DB if available
+            # Update API usage in DB if available
             if api_usage and db_client:
                 try:
                     db_client.db.task_logs.update_one(
@@ -227,7 +201,19 @@ def run_report_job(context: Dict[str, Any]):
                 except Exception as e:
                     logger.warning(f"[Job {job_id}] Failed to update api_usage: {e}")
 
-            writer.log_progress(task_id, status, message, progress)
+            # Update progress status metrics in DB
+            if db_client:
+                try:
+                    db_client.db.task_logs.update_one(
+                        {"job_id": job_id},
+                        {"$set": {
+                            "status": status,
+                            "progress": progress,
+                            "last_message": message
+                        }}
+                    )
+                except Exception as e:
+                    logger.warning(f"[Job {job_id}] Failed to log progress in DB: {e}")
         except Exception as e:
             logger.warning(f"[Job {job_id}] Could not log progress: {e}")
     
@@ -272,8 +258,7 @@ def run_report_job(context: Dict[str, Any]):
 
         # ========== BƯỚC 4: Gửi final callback SUCCESS ==========
         logger.info(f"[Job {job_id}] Completed successfully")
-        send_progress_update("COMPLETED", final_message, 100)
-        writer.update_task_history(task_id, "COMPLETED", final_message)
+        send_progress_update("SUCCESS", final_message, 100)
         
         return {
             "status": "SUCCESS",

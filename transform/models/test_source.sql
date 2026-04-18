@@ -1,0 +1,1 @@
+SELECT * FROM {{ source('facebook_raw', 'raw_fb_campaign_overview_report') }} LIMIT 10

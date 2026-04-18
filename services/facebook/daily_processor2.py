@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Optional, Set
 from services.facebook.base_processor import FacebookAdsBaseReporter
 import logging
 import json
-from services.facebook.constant import CONVERSION_METRICS_MAP, EFFECTIVE_STATUS_FILTERS
+from services.facebook.constant import EFFECTIVE_STATUS_FILTERS
 
 logger = logging.getLogger(__name__)
 
@@ -101,29 +101,16 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
         
         # Build insight fields
         insight_fields = set(["account_id", "date_start", "date_stop"])
+        # ELT MODE: Lấy TOÀN BỘ các trường insight mà template hỗ trợ + các raw containers
+        insight_fields.update(template_config.get("insight_fields", []))
+        insight_fields.update(["actions", "action_values", "cost_per_action_type", "purchase_roas"])
         
         # Add level_id field
         insight_fields.add(f"{level}_id")
         
         # Add selected insight fields
         for field in selected_fields:
-            if field in CONVERSION_METRICS_MAP:
-                parent_field = CONVERSION_METRICS_MAP[field].get("parent_field")
-                api_field = CONVERSION_METRICS_MAP[field].get("api_field")
-                
-                if parent_field:
-                    if parent_field.startswith("actions:"):
-                        insight_fields.add("actions")
-                    elif parent_field.startswith("action_values:"):
-                        insight_fields.add("action_values")
-                    else:
-                        insight_fields.add(parent_field)
-                elif api_field:
-                    if api_field.startswith("actions:"):
-                        insight_fields.add("actions")
-                    else:
-                        insight_fields.add(api_field)
-            elif field in template_config.get("insight_fields", []):
+            if field in template_config.get("insight_fields", []):
                 insight_fields.add(field)
         
         # Build params
@@ -662,20 +649,20 @@ class FacebookDailyReporterV2(FacebookAdsBaseReporter):
         
         logger.info(f"✓ Phase 2 complete: {len(combined_metadata)} objects")
         
-        # ===== PHASE 3: JOIN =====
-        logger.info("\n===== PHASE 3: JOINING DATA =====")
-        self._report_progress("Đang join data...", 90)
+        # ===== PHASE 3: ELT - NO JOIN =====
+        logger.info("\n===== PHASE 3: PREPARING ELT DATA (NO JOIN) =====")
+        self._report_progress("Chuẩn bị dữ liệu ELT...", 95)
         
-        final_data = self._join_insights_with_metadata(
-            all_insights_data,
-            combined_metadata,
-            level
-        )
+        # Convert metadata map to list for loading
+        metadata_list = list(combined_metadata.values())
         
-        logger.info(f"✓ Complete: {len(final_data)} final rows")
+        logger.info(f"✓ Ready for ELT: {len(all_insights_data)} metrics, {len(metadata_list)} metadata records")
         self._report_progress("Hoàn thành!", 100)
         
-        return final_data
+        return {
+            "metrics": all_insights_data,
+            "metadata": metadata_list
+        }
 
 if __name__ == "__main__":
     import os

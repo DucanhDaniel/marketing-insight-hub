@@ -1,0 +1,16 @@
+## KHI DEV
+Chạy Celery
+celery -A workers.tasks_modular.celery_app worker --loglevel=info -P solo
+
+Chạy môi trường
+.venv\Scripts\activate.bat
+
+Chạy API
+uvicorn main:app --reload --port 8011
+
+Chạy dbt để cập nhật sources / profiles mới
+uv run --env-file ../.env dbt run --profiles-dir .
+
+Chạy dbt để cập nhật file SQL mới | Cần cd vào folder transform
+uv run --env-file ../.env 
+uv run --env-file ../.env dbt run --select flatten_fb_campaign_actions --full-refresh --profiles-dir .

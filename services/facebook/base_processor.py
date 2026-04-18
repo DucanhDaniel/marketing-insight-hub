@@ -7,7 +7,7 @@ import requests
 import json
 import time
 from typing import List, Dict, Any, Optional, Callable
-from .constant import FACEBOOK_REPORT_TEMPLATES_STRUCTURE, CONVERSION_METRICS_MAP
+from .constant import FACEBOOK_REPORT_TEMPLATES_STRUCTURE
 from datetime import datetime, timedelta
 from collections import defaultdict
 import logging
@@ -478,72 +478,10 @@ class FacebookAdsBaseReporter:
         selected_fields: List[str]
     ) -> Dict[str, Any]:
         """
-        Flatten các action metrics phức tạp (Video, Actions, Cost, etc.)
-        Logic dựa trên CONVERSION_METRICS_MAP.
+        [ELT Mode] Trả về dữ liệu thô (raw) mà không thực hiện làm phẳng hoặc đổi tên.
+        Dữ liệu gốc (actions, action_values,...) sẽ được giữ nguyên để dbt xử lý.
         """
-        new_row = {**row}
-        
-        for friendly_name, metric_info in CONVERSION_METRICS_MAP.items():
-            # 1. Chỉ xử lý nếu người dùng chọn
-            if friendly_name not in selected_fields:
-                continue
-            
-            api_field = metric_info.get("api_field")
-            parent_field = metric_info.get("parent_field")
-            target_action_type = metric_info.get("action_type")
-            
-            value = 0.0
-
-            # TRƯỜNG HỢP 1: Cấu hình rõ ràng action_type trong MAP (Ưu tiên cao nhất)
-            # Ví dụ: "Video Views (75%)" -> parent: video_p75_watched_actions, type: video_view
-            if parent_field and target_action_type:
-                data_list = row.get(parent_field, [])
-                value = self._extract_value_from_list(data_list, target_action_type)
-
-            # TRƯỜNG HỢP 2: Parse từ api_field có dấu ":" (Logic cũ)
-            # Ví dụ: "actions:comment" -> parent: actions, type: comment
-            elif api_field and ":" in api_field:
-                parts = api_field.split(":")
-                if len(parts) == 2:
-                    p_field = parts[0] # actions, cost_per_action_type, ...
-                    a_type = parts[1]  # comment, like, ...
-                    
-                    data_list = row.get(p_field, [])
-                    value = self._extract_value_from_list(data_list, a_type)
-
-            # TRƯỜNG HỢP 3: Special Case cho purchase_roas (nếu không được định nghĩa rõ trong Map)
-            elif api_field == "purchase_roas":
-                data_list = row.get("purchase_roas", [])
-                value = self._extract_value_from_list(data_list, "omni_purchase")
-
-            # TRƯỜNG HỢP 4: Giá trị trực tiếp (Scalar value)
-            # Ví dụ: "Inline link clicks", "impressions", "spend"
-            elif api_field:
-                raw_val = row.get(api_field, 0)
-                try:
-                    value = float(raw_val)
-                except (ValueError, TypeError):
-                    value = 0.0
-            
-            # Gán giá trị vào row mới
-            new_row[friendly_name] = value
-
-        # Cleanup: Xóa các trường list gốc để file output gọn gàng
-        # Danh sách các trường kỹ thuật cần dọn dẹp
-        technical_fields_to_remove = {
-            "actions", "action_values", "cost_per_action_type", "purchase_roas",
-            "video_p25_watched_actions", "video_p50_watched_actions", 
-            "video_p75_watched_actions", "video_p95_watched_actions", 
-            "video_p100_watched_actions", "video_30_sec_watched_actions",
-            "video_avg_time_watched_actions", "video_play_actions",
-            "video_thruplay_watched_actions", "cost_per_thruplay",
-            "outbound_clicks", "outbound_clicks_ctr", "unique_outbound_clicks"
-        }
-
-        for field in technical_fields_to_remove:
-            new_row.pop(field, None)
-            
-        return new_row
+        return row
         
     @staticmethod
     def _reduce_time_range_in_url(url: str, reduction_factor: int = 2) -> Dict[str, Any]:

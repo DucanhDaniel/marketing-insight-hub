@@ -7,10 +7,11 @@ dotenv
 celery
 redis
 gevent
-gspread 
-google-auth-oauthlib
 pymongo 
 python-dotenv
 fastapi-cors
 gunicorn
 flower
+pyngrok
+clickhouse-connect
+dbt-clickhouse

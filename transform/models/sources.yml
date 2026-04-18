@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: facebook_raw
+    database: marketing_raw
+    tables:
+      - name: raw_fb_campaign_overview_report
+        description: "Dữ liệu thô từ Facebook Campaign"
+        tests:
+          - dbt_utils.at_least_one: # Kiểm tra xem bảng có dữ liệu không
+              column_name: job_id
+      - name: raw_fb_campaign_performance_by_age__gender
+        columns:
+          - name: data
+            tests:
+              - not_null # Đảm bảo cột JSON không bị trống
+      - name: raw_fb_campaign_daily_report
+        columns:
+          - name: data
+            tests:
+              - not_null # Đảm bảo cột JSON không bị trống
+  - name: marketing_analytics_silver
+    database: marketing_analytics_silver
+    tables:
+      - name: stg_fb_campaign_daily
+        description: "Dữ liệu đã làm sạch từ FB campaign daily"
+        columns:
+          - name: surrogate_key
+            tests:
+              - not_null
+              - unique

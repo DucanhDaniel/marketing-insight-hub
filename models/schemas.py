@@ -20,9 +20,7 @@ class CreateJobRequest(BaseModel):
     # Thông tin user
     user_email: str
     
-    # --- Thông tin cho việc ghi Sheet ---
-    spreadsheet_id: str
-    sheet_name: str
-    is_overwrite: bool = False
-    is_first_chunk: bool = False
+    # --- ELT ClickHouse Fields ---
+    destination: str = "clickhouse"
+    
     selected_fields: List[str] = Field(default_factory=list)
