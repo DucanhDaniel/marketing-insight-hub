@@ -9,7 +9,7 @@ sources:
         tests:
           - dbt_utils.at_least_one: # Kiểm tra xem bảng có dữ liệu không
               column_name: job_id
-      - name: raw_fb_campaign_performance_by_age__gender
+      - name: raw_fb_campaign_performance_by_age___gender
         columns:
           - name: data
             tests:
@@ -19,6 +19,17 @@ sources:
           - name: data
             tests:
               - not_null # Đảm bảo cột JSON không bị trống
+      - name: raw_fb_location_detailed_report_metrics
+        columns:
+          - name: data
+            tests:
+              - not_null # Đảm bảo cột JSON không bị trống
+      - name: raw_fb_metadata_shared
+        columns:
+          - name: data
+            tests:
+              - not_null # Đảm bảo cột JSON không bị trống
+
   - name: marketing_analytics_silver
     database: marketing_analytics_silver
     tables:
@@ -26,6 +37,20 @@ sources:
         description: "Dữ liệu đã làm sạch từ FB campaign daily"
         columns:
           - name: surrogate_key
+            tests:
+              - not_null
+              - unique
+      - name: stg_fb_ad_daily_location
+        description: "Dữ liệu đã làm sạch từ FB ad daily location"
+        columns:
+          - name: surrogate_key
+            tests:
+              - not_null
+              - unique
+      - name: stg_fb_ad_metadata
+        description: "Dữ liệu đã làm sạch từ FB ad metadata"
+        columns:
+          - name: id
             tests:
               - not_null
               - unique

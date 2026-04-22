@@ -14,3 +14,9 @@ uv run --env-file ../.env dbt run --profiles-dir .
 Chạy dbt để cập nhật file SQL mới | Cần cd vào folder transform
 uv run --env-file ../.env 
 uv run --env-file ../.env dbt run --select flatten_fb_campaign_actions --full-refresh --profiles-dir .
+
+Chạy dbt để generate documentation
+uv run --env-file ../.env dbt docs generate
+
+Chạy dbt để serve documentation
+uv run --env-file ../.env dbt docs serve

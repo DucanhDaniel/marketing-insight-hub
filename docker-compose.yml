@@ -127,8 +127,60 @@ services:
     labels:
       - "autoheal=true"
 
+  superset-init:
+    image: apache/superset:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.superset
+    container_name: superset_init
+    depends_on:
+      - redis
+    volumes:
+      - superset-home:/app/superset_home
+    environment:
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY}
+      - SQLALCHEMY_DATABASE_URI=sqlite:////app/superset_home/superset.db
+    command: >
+      bash -c "
+        superset db upgrade &&
+        superset fab create-admin --username admin --firstname Admin --lastname Admin --email admin@localhost --password admin || true &&
+        superset init
+      "
+    restart: "no"
+    healthcheck:
+      disable: true
+
+  superset:
+    image: apache/superset:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.superset
+    container_name: superset_app
+    restart: always
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY}
+      - SQLALCHEMY_DATABASE_URI=sqlite:////app/superset_home/superset.db
+    volumes:
+      - superset-home:/app/superset_home
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8088/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "autoheal=true"
 volumes:
   mongo-data:
   redis-data:
   clickhouse-data:
   clickhouse-logs:
+  superset-home:
+
+

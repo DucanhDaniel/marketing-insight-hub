@@ -1,0 +1,13 @@
+models:
+  - name: fact_ad_location_daily
+    columns:
+      - name: region
+        tests:
+          - relationships:
+              to: ref('dim_fb_regions')
+              field: region
+      - name: ad_id
+        tests:
+          - relationships:
+              to: ref('dim_fb_ads')
+              field: ad_id

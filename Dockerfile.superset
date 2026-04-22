@@ -1,0 +1,6 @@
+FROM apache/superset:latest
+
+USER root
+RUN pip install --no-cache-dir --target=/app/pythonpath clickhouse-connect
+COPY superset/superset_config.py /app/pythonpath/superset_config.py
+USER superset

@@ -1,0 +1,64 @@
+region_code,region_name,region_type,macro_region
+VN-44,An Giang Province,tỉnh,South
+VN-43,Bà Rịa–Vũng Tàu Province,tỉnh,South
+VN-54,Bắc Giang Province,tỉnh,North
+VN-53,Bắc Kạn Province,tỉnh,North
+VN-55,Bạc Liêu Province,tỉnh,South
+VN-56,Bắc Ninh Province,tỉnh,North
+VN-50,Bến Tre Province,tỉnh,South
+VN-31,Bình Định Province,tỉnh,Central
+VN-57,Bình Dương Province,tỉnh,South
+VN-58,Bình Phước Province,tỉnh,South
+VN-40,Bình Thuận Province,tỉnh,Central
+VN-59,Cà Mau Province,tỉnh,South
+VN-04,Cao Bằng Province,tỉnh,North
+VN-33,Đắk Lắk Province,tỉnh,Central
+VN-72,Đắk Nông Province,tỉnh,Central
+VN-71,Điện Biên Province,tỉnh,North
+VN-39,Đồng Nai Province,tỉnh,South
+VN-45,Đồng Tháp Province,tỉnh,South
+VN-30,Gia Lai Province,tỉnh,Central
+VN-03,Hà Giang Province,tỉnh,North
+VN-63,Hà Nam Province,tỉnh,North
+VN-23,Hà Tĩnh Province,tỉnh,Central
+VN-61,Hải Dương Province,tỉnh,North
+VN-73,Hậu Giang Province,tỉnh,South
+VN-14,Hòa Bình Province,tỉnh,North
+VN-66,Hưng Yên Province,tỉnh,North
+VN-34,Khánh Hòa Province,tỉnh,Central
+VN-47,Kiên Giang Province,tỉnh,South
+VN-28,Kon Tum Province,tỉnh,Central
+VN-01,Lai Châu Province,tỉnh,North
+VN-35,Lâm Đồng Province,tỉnh,Central
+VN-09,Lạng Sơn Province,tỉnh,North
+VN-02,Lào Cai Province,tỉnh,North
+VN-41,Long An Province,tỉnh,South
+VN-67,Nam Định Province,tỉnh,North
+VN-22,Nghệ An Province,tỉnh,Central
+VN-18,Ninh Bình Province,tỉnh,North
+VN-36,Ninh Thuận Province,tỉnh,Central
+VN-68,Phú Thọ Province,tỉnh,North
+VN-32,Phú Yên Province,tỉnh,Central
+VN-24,Quảng Bình Province,tỉnh,Central
+VN-27,Quảng Nam Province,tỉnh,Central
+VN-29,Quảng Ngãi Province,tỉnh,Central
+VN-13,Quảng Ninh Province,tỉnh,North
+VN-25,Quảng Trị Province,tỉnh,Central
+VN-52,Sóc Trăng Province,tỉnh,South
+VN-05,Sơn La Province,tỉnh,North
+VN-37,Tây Ninh Province,tỉnh,South
+VN-20,Thái Bình Province,tỉnh,North
+VN-69,Thái Nguyên Province,tỉnh,North
+VN-21,Thanh Hóa Province,tỉnh,Central
+VN-46,Tiền Giang Province,tỉnh,South
+VN-51,Trà Vinh Province,tỉnh,South
+VN-07,Tuyên Quang Province,tỉnh,North
+VN-49,Vĩnh Long Province,tỉnh,South
+VN-70,Vĩnh Phúc Province,tỉnh,North
+VN-06,Yên Bái Province,tỉnh,North
+VN-CT,Cần Thơ,thành phố,South
+VN-DN,Da Nang,thành phố,Central
+VN-HN,Hanoi,thành phố,North
+VN-HP,Haiphong,thành phố,North
+VN-SG,Ho Chi Minh City,thành phố,South
+VN-26,Thừa Thiên–Huế Province,thành phố,Central
