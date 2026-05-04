@@ -17,3 +17,5 @@ data/
 gunicorn.ctl
 
 .env.dev
+
+airflow/logs
