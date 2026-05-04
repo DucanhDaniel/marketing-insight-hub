@@ -32,3 +32,4 @@ tiktok/
 README.md
 
 .claude/
+airflow/logs/

@@ -62,8 +62,8 @@ COPY . .
 RUN groupadd --system appgroup
 
 # [THÊM MỚI] Tạo một người dùng hệ thống tên là 'appuser' và thêm vào nhóm 'appgroup'
-# --no-create-home: không cần tạo thư mục home cho user này
-RUN useradd --system --no-create-home --gid appgroup appuser
+# --create-home: tạo thư mục home cho user này để Gunicorn có thể tạo control socket
+RUN useradd --system --create-home --gid appgroup appuser
 
 # [THÊM MỚI] Gán quyền sở hữu thư mục /app cho người dùng và nhóm mới
 RUN chown -R appuser:appgroup /app

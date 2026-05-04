@@ -1,0 +1,52 @@
+[2026-05-04T09:30:25.729+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: dbt_pipeline.dbt_run manual__2026-05-04T09:30:16.359162+00:00 [queued]>
+[2026-05-04T09:30:25.738+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: dbt_pipeline.dbt_run manual__2026-05-04T09:30:16.359162+00:00 [queued]>
+[2026-05-04T09:30:25.739+0000] {taskinstance.py:2170} INFO - Starting attempt 1 of 2
+[2026-05-04T09:30:25.751+0000] {taskinstance.py:2191} INFO - Executing <Task(BashOperator): dbt_run> on 2026-05-04 09:30:16.359162+00:00
+[2026-05-04T09:30:25.756+0000] {standard_task_runner.py:60} INFO - Started process 185 to run task
+[2026-05-04T09:30:25.761+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'dbt_pipeline', 'dbt_run', 'manual__2026-05-04T09:30:16.359162+00:00', '--job-id', '43', '--raw', '--subdir', 'DAGS_FOLDER/dbt_dag.py', '--cfg-path', '/tmp/tmpc9us89hr']
+[2026-05-04T09:30:25.763+0000] {standard_task_runner.py:88} INFO - Job 43: Subtask dbt_run
+[2026-05-04T09:30:25.818+0000] {task_command.py:423} INFO - Running <TaskInstance: dbt_pipeline.dbt_run manual__2026-05-04T09:30:16.359162+00:00 [running]> on host b3e120de763a
+[2026-05-04T09:30:25.923+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='dbt_pipeline' AIRFLOW_CTX_TASK_ID='dbt_run' AIRFLOW_CTX_EXECUTION_DATE='2026-05-04T09:30:16.359162+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-05-04T09:30:16.359162+00:00'
+[2026-05-04T09:30:25.925+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2026-05-04T09:30:25.928+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'cd /opt/***/transform && /opt/***/dbt_venv/bin/dbt run --profiles-dir .']
+[2026-05-04T09:30:25.969+0000] {subprocess.py:86} INFO - Output:
+[2026-05-04T09:30:27.884+0000] {subprocess.py:93} INFO - [0m09:30:27  Running with dbt=1.11.8
+[2026-05-04T09:30:28.129+0000] {subprocess.py:93} INFO - [0m09:30:28  Registered adapter: clickhouse=1.10.0
+[2026-05-04T09:30:29.324+0000] {subprocess.py:93} INFO - [0m09:30:29  Found 12 models, 1 seed, 13 data tests, 8 sources, 637 macros
+[2026-05-04T09:30:29.333+0000] {subprocess.py:93} INFO - [0m09:30:29
+[2026-05-04T09:30:29.336+0000] {subprocess.py:93} INFO - [0m09:30:29  Concurrency: 1 threads (target='dev')
+[2026-05-04T09:30:29.338+0000] {subprocess.py:93} INFO - [0m09:30:29
+[2026-05-04T09:30:29.871+0000] {subprocess.py:93} INFO - [0m09:30:29  1 of 12 START sql incremental model `marketing_analytics_gold`.`dim_fb_accounts`  [RUN]
+[2026-05-04T09:30:30.475+0000] {subprocess.py:93} INFO - [0m09:30:30  1 of 12 OK created sql incremental model `marketing_analytics_gold`.`dim_fb_accounts`  [[32mOK[0m in 0.60s]
+[2026-05-04T09:30:30.480+0000] {subprocess.py:93} INFO - [0m09:30:30  2 of 12 START sql incremental model `marketing_analytics_gold`.`dim_fb_ads` .... [RUN]
+[2026-05-04T09:30:30.694+0000] {subprocess.py:93} INFO - [0m09:30:30  2 of 12 OK created sql incremental model `marketing_analytics_gold`.`dim_fb_ads`  [[32mOK[0m in 0.21s]
+[2026-05-04T09:30:30.705+0000] {subprocess.py:93} INFO - [0m09:30:30  3 of 12 START sql incremental model `marketing_analytics_gold`.`dim_fb_campaigns`  [RUN]
+[2026-05-04T09:30:30.952+0000] {subprocess.py:93} INFO - [0m09:30:30  3 of 12 OK created sql incremental model `marketing_analytics_gold`.`dim_fb_campaigns`  [[32mOK[0m in 0.24s]
+[2026-05-04T09:30:30.957+0000] {subprocess.py:93} INFO - [0m09:30:30  4 of 12 START sql incremental model `marketing_analytics_gold`.`dim_fb_regions`  [RUN]
+[2026-05-04T09:30:31.166+0000] {subprocess.py:93} INFO - [0m09:30:31  4 of 12 OK created sql incremental model `marketing_analytics_gold`.`dim_fb_regions`  [[32mOK[0m in 0.21s]
+[2026-05-04T09:30:31.171+0000] {subprocess.py:93} INFO - [0m09:30:31  5 of 12 START sql incremental model `marketing_analytics_gold`.`fact_ad_location_daily`  [RUN]
+[2026-05-04T09:30:31.417+0000] {subprocess.py:93} INFO - [0m09:30:31  5 of 12 OK created sql incremental model `marketing_analytics_gold`.`fact_ad_location_daily`  [[32mOK[0m in 0.24s]
+[2026-05-04T09:30:31.422+0000] {subprocess.py:93} INFO - [0m09:30:31  6 of 12 START sql incremental model `marketing_analytics_gold`.`fact_fb_campaigns`  [RUN]
+[2026-05-04T09:30:31.657+0000] {subprocess.py:93} INFO - [0m09:30:31  6 of 12 OK created sql incremental model `marketing_analytics_gold`.`fact_fb_campaigns`  [[32mOK[0m in 0.23s]
+[2026-05-04T09:30:31.661+0000] {subprocess.py:93} INFO - [0m09:30:31  7 of 12 START sql incremental model `marketing_analytics_silver`.`flatten_fb_campaign_actions`  [RUN]
+[2026-05-04T09:30:31.839+0000] {subprocess.py:93} INFO - [0m09:30:31  7 of 12 OK created sql incremental model `marketing_analytics_silver`.`flatten_fb_campaign_actions`  [[32mOK[0m in 0.17s]
+[2026-05-04T09:30:31.842+0000] {subprocess.py:93} INFO - [0m09:30:31  8 of 12 START sql incremental model `marketing_analytics_silver`.`stg_fb_ad_daily`  [RUN]
+[2026-05-04T09:30:32.063+0000] {subprocess.py:93} INFO - [0m09:30:32  8 of 12 OK created sql incremental model `marketing_analytics_silver`.`stg_fb_ad_daily`  [[32mOK[0m in 0.22s]
+[2026-05-04T09:30:32.070+0000] {subprocess.py:93} INFO - [0m09:30:32  9 of 12 START sql incremental model `marketing_analytics_silver`.`stg_fb_ad_daily_location`  [RUN]
+[2026-05-04T09:30:32.302+0000] {subprocess.py:93} INFO - [0m09:30:32  9 of 12 OK created sql incremental model `marketing_analytics_silver`.`stg_fb_ad_daily_location`  [[32mOK[0m in 0.23s]
+[2026-05-04T09:30:32.308+0000] {subprocess.py:93} INFO - [0m09:30:32  10 of 12 START sql incremental model `marketing_analytics_silver`.`stg_fb_ad_metadata`  [RUN]
+[2026-05-04T09:30:32.503+0000] {subprocess.py:93} INFO - [0m09:30:32  10 of 12 OK created sql incremental model `marketing_analytics_silver`.`stg_fb_ad_metadata`  [[32mOK[0m in 0.19s]
+[2026-05-04T09:30:32.507+0000] {subprocess.py:93} INFO - [0m09:30:32  11 of 12 START sql incremental model `marketing_analytics_silver`.`stg_fb_campaign_daily`  [RUN]
+[2026-05-04T09:30:32.728+0000] {subprocess.py:93} INFO - [0m09:30:32  11 of 12 OK created sql incremental model `marketing_analytics_silver`.`stg_fb_campaign_daily`  [[32mOK[0m in 0.22s]
+[2026-05-04T09:30:32.732+0000] {subprocess.py:93} INFO - [0m09:30:32  12 of 12 START sql view model `marketing_analytics`.`test_source` .............. [RUN]
+[2026-05-04T09:30:32.856+0000] {subprocess.py:93} INFO - [0m09:30:32  12 of 12 OK created sql view model `marketing_analytics`.`test_source` ......... [[32mOK[0m in 0.12s]
+[2026-05-04T09:30:32.865+0000] {subprocess.py:93} INFO - [0m09:30:32
+[2026-05-04T09:30:32.867+0000] {subprocess.py:93} INFO - [0m09:30:32  Finished running 11 incremental models, 1 view model in 0 hours 0 minutes and 3.52 seconds (3.52s).
+[2026-05-04T09:30:33.080+0000] {subprocess.py:93} INFO - [0m09:30:33
+[2026-05-04T09:30:33.081+0000] {subprocess.py:93} INFO - [0m09:30:33  [32mCompleted successfully[0m
+[2026-05-04T09:30:33.083+0000] {subprocess.py:93} INFO - [0m09:30:33
+[2026-05-04T09:30:33.084+0000] {subprocess.py:93} INFO - [0m09:30:33  Done. PASS=12 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=12
+[2026-05-04T09:30:35.133+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2026-05-04T09:30:36.220+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=dbt_pipeline, task_id=dbt_run, execution_date=20260504T093016, start_date=20260504T093025, end_date=20260504T093036
+[2026-05-04T09:30:37.581+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 0
+[2026-05-04T09:30:37.601+0000] {taskinstance.py:3280} INFO - 1 downstream tasks scheduled from follow-on schedule check
