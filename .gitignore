@@ -15,3 +15,5 @@ wheels/
 
 data/
 gunicorn.ctl
+
+.env.dev
