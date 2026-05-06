@@ -28,7 +28,11 @@ SELECT
 FROM {{ source('facebook_raw', 'raw_fb_metadata_shared') }}
 
 WHERE 
-  JSONExtractString(data, '_template') = 'LOCATION_DETAILED_REPORT'
+  (
+    JSONExtractString(data, '_template') = 'LOCATION_DETAILED_REPORT' OR
+    JSONExtractString(data, '_template') = 'AGE & GENDER_DETAILED_REPORT' OR
+    JSONExtractString(data, '_template') = 'AD_CREATIVE_DAILY_REPORT'
+  )
 
 {% if is_incremental() %}
   AND created_at > (SELECT max(created_at) FROM {{ this }})

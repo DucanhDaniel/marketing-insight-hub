@@ -37,3 +37,9 @@ sources:
           - name: data
             tests:
               - not_null # Đảm bảo cột JSON không bị trống
+      - name: raw_fb_age___gender_detailed_report_metrics
+        description: "Dữ liệu facebook ad creative breakdown theo tuổi, giới tính"
+        columns:
+          - name: data
+            tests:
+              - not_null # Đảm bảo cột JSON không bị trống

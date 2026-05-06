@@ -269,3 +269,105 @@ models:
         description: "Tên trang Facebook chạy quảng cáo"
       - name: actor_id
         description: "ID trang Facebook (Page ID) chạy quảng cáo"
+
+  - name: stg_fb_ad_age_gender_daily
+    description: "Staging model: Parse dữ liệu báo cáo hiệu suất quảng cáo Facebook theo ngày, phân tích theo nhóm tuổi (age) và giới tính (gender)."
+    columns:
+      - name: surrogate_key
+        description: "Khóa tổng hợp: concat(account_id, '_', ad_id, '_', date_start, '_', age, '_', gender)"
+        tests:
+          - not_null
+          - unique
+      - name: job_id
+        description: "ID của ETL job đã tạo ra bản ghi này"
+        tests: 
+          - not_null
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+        tests: 
+          - not_null
+      - name: account_id
+        description: "ID tài khoản quảng cáo Facebook"
+      - name: account_name
+        description: "Tên tài khoản quảng cáo Facebook"
+      - name: ad_id
+        description: "ID quảng cáo (ad) Facebook"
+      - name: date_start
+        description: "Ngày bắt đầu khoảng báo cáo (kiểu Date)"
+      - name: date_stop
+        description: "Ngày kết thúc khoảng báo cáo (kiểu Date)"
+      - name: age
+        description: "Phân nhóm tuổi quảng cáo (ví dụ: 18-24, 25-34, 65+)"
+      - name: gender
+        description: "Giới tính phân tích (MALE, FEMALE, UNKNOWN)"
+      - name: spend
+        description: "Chi tiêu cho quảng cáo trong kỳ"
+      - name: impressions
+        description: "Số lượt hiển thị quảng cáo"
+      - name: reach
+        description: "Số người tiếp cận duy nhất"
+      - name: clicks
+        description: "Tổng số lượt click"
+      - name: ctr
+        description: "Tỷ lệ click trên hiển thị (%)"
+      - name: cpc
+        description: "Chi phí mỗi lượt click"
+      - name: cpm
+        description: "Chi phí trên 1000 lượt hiển thị"
+      - name: frequency
+        description: "Tần suất hiển thị trên mỗi người"
+      - name: inline_link_clicks
+        description: "Số lượt click link nội tuyến"
+      - name: inline_link_click_ctr
+        description: "Tỷ lệ click link nội tuyến (%)"
+      - name: unique_inline_link_clicks
+        description: "Số lượt click link nội tuyến duy nhất"
+      - name: total_messaging_connection
+        description: "Số lượt kết nối tin nhắn Messenger (flatten từ actions)"
+      - name: messaging_welcome_message_view
+        description: "Số lượt xem tin nhắn chào mừng qua Messenger"
+      - name: messaging_first_reply
+        description: "Số lượt phản hồi đầu tiên qua Messenger"
+      - name: messaging_user_depth_2_message_send
+        description: "Số người dùng gửi tin nhắn lần 2 qua Messenger"
+      - name: messaging_conversation_started_7d
+        description: "Số cuộc hội thoại Messenger bắt đầu trong 7 ngày"
+      - name: messaging_conversation_replied_7d
+        description: "Số cuộc hội thoại Messenger được trả lời trong 7 ngày"
+      - name: post_engagement_count
+        description: "Tổng tương tác bài đăng"
+      - name: page_engagement
+        description: "Tổng tương tác trang Facebook"
+      - name: link_clicks
+        description: "Số lượt click vào link (flatten từ actions[action_type=link_click])"
+      - name: video_view_count
+        description: "Số lượt xem video"
+      - name: video_play_count
+        description: "Số lượt phát video (video_play_actions)"
+      - name: video_thruplay_count
+        description: "Số lượt xem video thruplay (video_thruplay_watched_actions)"
+      - name: video_p25_count
+        description: "Số lượt xem video đạt 25% (video_p25_watched_actions)"
+      - name: video_p50_count
+        description: "Số lượt xem video đạt 50% (video_p50_watched_actions)"
+      - name: video_p75_count
+        description: "Số lượt xem video đạt 75% (video_p75_watched_actions)"
+      - name: cost_per_messaging_connection
+        description: "Chi phí trên mỗi kết nối tin nhắn"
+      - name: cost_per_video_view
+        description: "Chi phí trên mỗi lượt xem video"
+      - name: cost_per_link_click
+        description: "Chi phí trên mỗi lượt click link"
+      - name: cost_per_post_engagement
+        description: "Chi phí trên mỗi tương tác bài đăng"
+      - name: cost_per_page_engagement
+        description: "Chi phí trên mỗi tương tác trang"
+      - name: cost_per_messaging_user_depth_2_message_send
+        description: "Chi phí trên mỗi lượt gửi tin nhắn lần 2"
+      - name: cost_per_messaging_conversation_replied_7d
+        description: "Chi phí trên mỗi cuộc hội thoại được trả lời trong 7 ngày"
+      - name: cost_per_messaging_first_reply
+        description: "Chi phí trên mỗi lượt phản hồi đầu tiên qua Messenger"
+  - name: stg_fb_ad_set_metadata
+    description: "Metadata của ad set facebook"
+
