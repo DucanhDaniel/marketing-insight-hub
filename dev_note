@@ -12,16 +12,17 @@ Chạy API
 uvicorn main:app --reload --port 8011
 
 Chạy dbt để cập nhật sources / profiles mới
-uv run --env-file ../.env dbt run --profiles-dir .
+uv run --env-file ../.env.dev dbt run --profiles-dir .
 
 Chạy dbt để cập nhật file SQL mới | Cần cd vào folder transform
-uv run --env-file ../.env 
-uv run --env-file ../.env dbt run --select flatten_fb_campaign_actions --full-refresh --profiles-dir .
+uv run --env-file ../.env.dev 
+uv run --env-file ../.env.dev dbt run --select flatten_fb_campaign_actions --full-refresh --profiles-dir .
 
 Chạy dbt để generate documentation
-uv run --env-file ../.env dbt docs generate
+uv run --env-file ../.env.dev dbt docs generate
 
 Chạy dbt để serve documentation
-uv run --env-file ../.env dbt docs serve
+uv run --env-file ../.env.dev dbt docs serve
 
-Có hai file .env và .env.dev
+Có hai file .env để chạy trong docker compose
+và .env.dev để dev dbt

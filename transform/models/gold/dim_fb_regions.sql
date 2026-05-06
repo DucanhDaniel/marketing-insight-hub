@@ -12,6 +12,6 @@ SELECT
     m.region_type,
     coalesce(m.macro_region, 'Unknown') as macro_region,
     now() as created_at
-FROM {{ source('marketing_analytics_silver', 'stg_fb_ad_daily_location') }} s
+FROM {{ ref('stg_fb_ad_daily_location') }} s
 LEFT JOIN {{ ref('vietnam_region_mapping') }} m 
     ON trim(s.region) = trim(m.region_name)

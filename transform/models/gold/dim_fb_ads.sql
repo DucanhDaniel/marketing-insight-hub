@@ -20,7 +20,7 @@ SELECT DISTINCT
     page_name,
     actor_id,
     created_at
-FROM {{ source('marketing_analytics_silver', 'stg_fb_ad_metadata') }}
+FROM {{ ref('stg_fb_ad_metadata') }}
 
 {% if is_incremental() %}
   -- Chỉ lấy dữ liệu mới hơn thời điểm lớn nhất hiện có trong bảng

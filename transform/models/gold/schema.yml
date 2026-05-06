@@ -1,0 +1,213 @@
+version: 2
+
+models:
+  # ──────────────────────────────────────────────
+  # FACT TABLES
+  # ──────────────────────────────────────────────
+
+  - name: fact_fb_campaigns_daily
+    description: >
+      Bảng fact chứa hiệu suất quảng cáo Facebook ở cấp độ campaign theo từng ngày.
+      Mỗi dòng đại diện cho một cặp (campaign, ngày) duy nhất.
+      Dữ liệu được làm sạch từ silver layer (stg_fb_campaign_daily).
+    columns:
+      - name: surrogate_key
+        description: "Khóa tổng hợp duy nhất, hash từ account_id + campaign_id + date_start"
+        tests:
+          - not_null
+          - unique
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+        tests:
+          - not_null
+      - name: account_id
+        description: "ID tài khoản quảng cáo Facebook"
+        tests:
+          - not_null
+      - name: campaign_id
+        description: "ID campaign Facebook"
+        tests:
+          - not_null
+      - name: date_start
+        description: "Ngày bắt đầu của khoảng thời gian báo cáo"
+      - name: date_stop
+        description: "Ngày kết thúc của khoảng thời gian báo cáo"
+      - name: spend
+        description: "Tổng chi tiêu (VNĐ hoặc đơn vị tiền tệ của tài khoản) trong kỳ báo cáo"
+      - name: reach
+        description: "Số người dùng duy nhất đã được tiếp cận bởi quảng cáo"
+      - name: impressions
+        description: "Tổng số lần quảng cáo được hiển thị"
+      - name: cpc
+        description: "Chi phí trên mỗi lượt click (Cost Per Click)"
+      - name: cpm
+        description: "Chi phí trên 1000 lượt hiển thị (Cost Per Mille)"
+      - name: ctr
+        description: "Tỷ lệ click trên số lần hiển thị (Click-Through Rate), đơn vị %"
+      - name: clicks
+        description: "Tổng số lượt click vào quảng cáo"
+      - name: frequency
+        description: "Số lần trung bình một người dùng nhìn thấy quảng cáo"
+      - name: cost_per_unique_inline_link_click
+        description: "Chi phí trung bình cho mỗi lượt click link duy nhất"
+      - name: post_engagement
+        description: "Tổng số tương tác với bài đăng (like, comment, share, click)"
+      - name: page_engagement
+        description: "Tổng số tương tác với trang Facebook (like trang, follow, ...)"
+      - name: comment_count
+        description: "Số lượt bình luận trên quảng cáo"
+      - name: video_view_count
+        description: "Số lượt xem video của quảng cáo"
+      - name: post_reaction_count
+        description: "Số lượt reaction (like, love, haha, ...) trên bài đăng quảng cáo"
+      - name: message_count
+        description: "Số lượt người dùng gửi tin nhắn chào hỏi (Welcome Message) qua Messenger"
+
+  - name: fact_fb_ad_location_daily
+    description: >
+      Bảng fact chứa hiệu suất quảng cáo Facebook phân tách theo vùng địa lý và theo từng ngày.
+      Mỗi dòng đại diện cho một cặp (ad, vùng, ngày) duy nhất.
+      Dữ liệu được lấy từ silver layer (stg_fb_ad_daily_location).
+    columns:
+      - name: surrogate_key
+        description: "Khóa tổng hợp duy nhất, hash từ account_id + ad_id + date_start + region"
+        tests:
+          - not_null
+          - unique
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+        tests:
+          - not_null
+      - name: ad_id
+        description: "ID quảng cáo (ad) Facebook"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_fb_ads')
+              field: ad_id
+      - name: date_start
+        description: "Ngày bắt đầu của khoảng thời gian báo cáo"
+      - name: date_stop
+        description: "Ngày kết thúc của khoảng thời gian báo cáo"
+      - name: region
+        description: "Tên vùng địa lý (tỉnh/thành) do Facebook phân loại"
+        tests:
+          - relationships:
+              to: ref('dim_fb_regions')
+              field: region
+      - name: spend
+        description: "Tổng chi tiêu trong kỳ báo cáo tại vùng địa lý này"
+      - name: impressions
+        description: "Tổng số lần quảng cáo được hiển thị tại vùng địa lý này"
+      - name: cpc
+        description: "Chi phí trên mỗi lượt click (Cost Per Click)"
+      - name: cpm
+        description: "Chi phí trên 1000 lượt hiển thị (Cost Per Mille)"
+      - name: ctr
+        description: "Tỷ lệ click trên số lần hiển thị (Click-Through Rate), đơn vị %"
+      - name: clicks
+        description: "Tổng số lượt click vào quảng cáo tại vùng địa lý này"
+      - name: total_messaging_connection
+        description: "Số lượt kết nối tin nhắn (Messaging Connection) tại vùng địa lý này"
+
+  # ──────────────────────────────────────────────
+  # DIMENSION TABLES
+  # ──────────────────────────────────────────────
+
+  - name: dim_fb_accounts
+    description: >
+      Bảng dimension chứa danh sách các tài khoản quảng cáo Facebook duy nhất.
+      Mỗi dòng là một account_id. Dữ liệu được trích xuất từ stg_fb_campaign_daily.
+    columns:
+      - name: account_id
+        description: "ID tài khoản quảng cáo Facebook (primary key)"
+        tests:
+          - not_null
+          - unique
+      - name: account_name
+        description: "Tên hiển thị của tài khoản quảng cáo"
+        tests:
+          - not_null
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+
+  - name: dim_fb_campaigns
+    description: >
+      Bảng dimension chứa danh sách các campaign Facebook duy nhất cùng thông tin cơ bản.
+      Mỗi dòng là một campaign_id. Dữ liệu được trích xuất từ stg_fb_campaign_daily.
+    columns:
+      - name: campaign_id
+        description: "ID campaign Facebook (primary key)"
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: "ID tài khoản quảng cáo sở hữu campaign này"
+        tests:
+          - not_null
+      - name: campaign_name
+        description: "Tên campaign Facebook"
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+
+  - name: dim_fb_ads
+    description: >
+      Bảng dimension chứa thông tin chi tiết về từng quảng cáo (ad) Facebook.
+      Bao gồm metadata của creative như tên, nội dung, thumbnail, link.
+      Dữ liệu được trích xuất từ stg_fb_ad_metadata.
+    columns:
+      - name: ad_id
+        description: "ID quảng cáo Facebook (primary key)"
+        tests:
+          - not_null
+          - unique
+      - name: campaign_id
+        description: "ID campaign mà ad này thuộc về"
+        tests:
+          - not_null
+      - name: adset_id
+        description: "ID nhóm quảng cáo (ad set) mà ad này thuộc về"
+      - name: ad_name
+        description: "Tên quảng cáo"
+      - name: creative_id
+        description: "ID của creative được gắn vào quảng cáo"
+      - name: creative_name
+        description: "Tên creative"
+      - name: creative_body
+        description: "Nội dung văn bản chính của quảng cáo (primary text)"
+      - name: creative_title
+        description: "Tiêu đề của creative (headline)"
+      - name: creative_thumbnail_url
+        description: "URL ảnh thumbnail của creative (ảnh đại diện video hoặc hình ảnh quảng cáo)"
+      - name: creative_link_url
+        description: "URL đích mà người dùng được chuyển đến khi click vào quảng cáo"
+      - name: status
+        description: "Trạng thái hiện tại của quảng cáo (ACTIVE, PAUSED, ARCHIVED, ...)"
+      - name: page_name
+        description: "Tên trang Facebook được dùng để chạy quảng cáo"
+      - name: actor_id
+        description: "ID của trang Facebook (Page ID) chạy quảng cáo"
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+
+  - name: dim_fb_regions
+    description: >
+      Bảng dimension chứa danh sách các vùng địa lý Facebook kèm phân loại macro region của Việt Nam.
+      Được tạo bằng cách JOIN dữ liệu region từ Facebook với bảng mapping vietnam_region_mapping.
+      Dùng để nhóm tỉnh/thành vào các vùng lớn (Bắc/Trung/Nam) phục vụ phân tích địa lý.
+    columns:
+      - name: region
+        description: "Tên vùng địa lý gốc từ Facebook API (tên tỉnh/thành phố), là primary key"
+        tests:
+          - not_null
+          - unique
+      - name: country
+        description: "Mã quốc gia (ví dụ: VN)"
+      - name: region_code
+        description: "Mã vùng địa lý theo chuẩn nội bộ (từ bảng mapping)"
+      - name: region_type
+        description: "Loại vùng hành chính (tỉnh, thành phố trực thuộc TW, ...)"
+      - name: macro_region
+        description: "Phân loại vùng lớn (Bắc/Trung/Nam), mặc định 'Unknown' nếu không map được"
+      - name: created_at
+        description: "Thời điểm bản ghi được tạo (now() tại thời điểm chạy model)"

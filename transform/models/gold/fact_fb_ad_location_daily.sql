@@ -8,27 +8,19 @@
 SELECT
     surrogate_key,
     created_at,
-    account_id,
-    campaign_id,
+    ad_id,
     date_start,
     date_stop,
+    region, 
     spend,
-    reach,
     impressions,
     cpc,
     cpm,
     ctr,
     clicks,
-    frequency,
-    cost_per_unique_inline_link_click,
-    post_engagement_count AS post_engagement,
-    page_engagement,
-    comment_count,
-    video_view_count,
-    post_reaction_count,
-    onsite_conversion_messaging_welcome_message as message_count
+    total_messaging_connection
     
-FROM {{ source('marketing_analytics_silver', 'stg_fb_campaign_daily') }}
+FROM {{ ref('stg_fb_ad_daily_location') }}
 
 {% if is_incremental() %}
   -- Chỉ lấy dữ liệu mới hơn thời điểm lớn nhất hiện có trong bảng

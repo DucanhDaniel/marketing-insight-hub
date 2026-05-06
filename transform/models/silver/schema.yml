@@ -1,0 +1,271 @@
+version: 2
+
+models:
+  - name: stg_fb_campaign_daily
+    description: >
+      Staging model: Parse và làm sạch dữ liệu hiệu suất campaign Facebook theo ngày
+      từ bảng raw (raw_fb_campaign_daily_report). Mỗi dòng là một cặp (campaign_id, date_start) duy nhất.
+      Các trường action được flatten ra từ mảng JSON 'actions'.
+    columns:
+      - name: surrogate_key
+        description: "Khóa tổng hợp: concat(campaign_id, '_', date_start)"
+        tests:
+          - not_null
+          - unique
+      - name: job_id
+        description: "ID của ETL job đã tạo ra bản ghi này, dùng để trace lại lịch sử chạy"
+        tests:
+          - not_null
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+        tests:
+          - not_null
+      - name: account_id
+        description: "ID tài khoản quảng cáo Facebook"
+      - name: account_name
+        description: "Tên tài khoản quảng cáo Facebook"
+      - name: campaign_id
+        description: "ID campaign Facebook"
+      - name: campaign_name
+        description: "Tên campaign Facebook"
+      - name: date_start
+        description: "Ngày bắt đầu khoảng báo cáo (kiểu Date)"
+      - name: date_stop
+        description: "Ngày kết thúc khoảng báo cáo (kiểu Date)"
+      - name: spend
+        description: "Tổng chi tiêu trong kỳ"
+      - name: reach
+        description: "Số người dùng duy nhất được tiếp cận"
+      - name: impressions
+        description: "Tổng số lần hiển thị quảng cáo"
+      - name: cpc
+        description: "Chi phí mỗi lượt click"
+      - name: cpm
+        description: "Chi phí trên 1000 lượt hiển thị"
+      - name: ctr
+        description: "Tỷ lệ click / hiển thị (%)"
+      - name: clicks
+        description: "Tổng số lượt click"
+      - name: frequency
+        description: "Số lần trung bình một người xem quảng cáo"
+      - name: cost_per_unique_inline_link_click
+        description: "Chi phí trung bình cho mỗi lượt click link duy nhất"
+      - name: post_engagement_count
+        description: "Tổng tương tác bài đăng (flatten từ actions[action_type=post_engagement])"
+      - name: page_engagement
+        description: "Tổng tương tác trang (flatten từ actions[action_type=page_engagement])"
+      - name: onsite_conversion_messaging_welcome_message
+        description: "Số lượt xem Welcome Message qua Messenger (flatten từ actions)"
+      - name: comment_count
+        description: "Số lượt bình luận (flatten từ actions[action_type=comment])"
+      - name: video_view_count
+        description: "Số lượt xem video (flatten từ actions[action_type=video_view])"
+      - name: post_reaction_count
+        description: "Số lượt reaction bài đăng (flatten từ actions[action_type=post_reaction])"
+
+  - name: stg_fb_ad_daily
+    description: >
+      Staging model: Parse và làm sạch dữ liệu hiệu suất quảng cáo (ad-level) Facebook theo ngày.
+      Cấu trúc tương tự stg_fb_campaign_daily nhưng ở cấp độ ad thay vì campaign.
+      surrogate_key = concat(ad_id, '_', date_start).
+    columns:
+      - name: surrogate_key
+        description: "Khóa tổng hợp: concat(ad_id, '_', date_start)"
+        tests:
+          - not_null
+          - unique
+      - name: job_id
+        description: "ID của ETL job đã tạo ra bản ghi này"
+        tests:
+          - not_null
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+        tests:
+          - not_null
+      - name: account_id
+        description: "ID tài khoản quảng cáo Facebook"
+      - name: account_name
+        description: "Tên tài khoản quảng cáo Facebook"
+      - name: campaign_id
+        description: "ID campaign mà ad thuộc về"
+      - name: campaign_name
+        description: "Tên campaign mà ad thuộc về"
+      - name: date_start
+        description: "Ngày bắt đầu khoảng báo cáo (kiểu Date)"
+      - name: date_stop
+        description: "Ngày kết thúc khoảng báo cáo (kiểu Date)"
+      - name: spend
+        description: "Tổng chi tiêu trong kỳ"
+      - name: reach
+        description: "Số người dùng duy nhất được tiếp cận"
+      - name: impressions
+        description: "Tổng số lần hiển thị quảng cáo"
+      - name: cpc
+        description: "Chi phí mỗi lượt click"
+      - name: cpm
+        description: "Chi phí trên 1000 lượt hiển thị"
+      - name: ctr
+        description: "Tỷ lệ click / hiển thị (%)"
+      - name: clicks
+        description: "Tổng số lượt click"
+      - name: frequency
+        description: "Số lần trung bình một người xem quảng cáo"
+      - name: cost_per_unique_inline_link_click
+        description: "Chi phí trung bình cho mỗi lượt click link duy nhất"
+      - name: post_engagement_count
+        description: "Tổng tương tác bài đăng (flatten từ actions)"
+      - name: page_engagement
+        description: "Tổng tương tác trang (flatten từ actions)"
+      - name: onsite_conversion_messaging_welcome_message
+        description: "Số lượt xem Welcome Message qua Messenger"
+      - name: comment_count
+        description: "Số lượt bình luận"
+      - name: video_view_count
+        description: "Số lượt xem video"
+      - name: post_reaction_count
+        description: "Số lượt reaction bài đăng"
+
+  - name: stg_fb_ad_daily_location
+    description: >
+      Staging model: Parse và làm sạch dữ liệu hiệu suất quảng cáo Facebook
+      phân tách theo vùng địa lý (tỉnh/thành) và theo ngày.
+      Nguồn: raw_fb_location_detailed_report_metrics.
+      surrogate_key = concat(account_id, '_', ad_id, '_', date_start, '_', region).
+    columns:
+      - name: surrogate_key
+        description: "Khóa tổng hợp: concat(account_id, '_', ad_id, '_', date_start, '_', region)"
+        tests:
+          - not_null
+          - unique
+      - name: job_id
+        description: "ID của ETL job đã tạo ra bản ghi này"
+        tests:
+          - not_null
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+        tests:
+          - not_null
+      - name: account_id
+        description: "ID tài khoản quảng cáo Facebook"
+      - name: account_name
+        description: "Tên tài khoản quảng cáo Facebook"
+      - name: ad_id
+        description: "ID quảng cáo (ad) Facebook"
+      - name: date_start
+        description: "Ngày bắt đầu khoảng báo cáo (kiểu Date)"
+      - name: date_stop
+        description: "Ngày kết thúc khoảng báo cáo (kiểu Date)"
+      - name: spend
+        description: "Chi tiêu tại vùng địa lý này trong kỳ"
+      - name: impressions
+        description: "Số lần hiển thị tại vùng địa lý này"
+      - name: cpc
+        description: "Chi phí mỗi lượt click tại vùng"
+      - name: cpm
+        description: "Chi phí trên 1000 lượt hiển thị tại vùng"
+      - name: ctr
+        description: "Tỷ lệ click / hiển thị tại vùng (%)"
+      - name: clicks
+        description: "Số lượt click tại vùng địa lý này"
+      - name: inline_link_clicks
+        description: "Số lượt click link nội tuyến (inline link)"
+      - name: inline_link_click_ctr
+        description: "Tỷ lệ click link nội tuyến (%)"
+      - name: region
+        description: "Tên vùng địa lý (tỉnh/thành phố) theo phân loại của Facebook"
+      - name: country
+        description: "Mã quốc gia (ví dụ: VN)"
+      - name: total_messaging_connection
+        description: "Số lượt kết nối tin nhắn Messenger (flatten từ actions)"
+      - name: link_clicks
+        description: "Số lượt click vào link (flatten từ actions[action_type=link_click])"
+      - name: page_engagement
+        description: "Tổng tương tác trang Facebook tại vùng"
+      - name: post_engagement_count
+        description: "Tổng tương tác bài đăng tại vùng"
+      - name: post_interaction_gross_count
+        description: "Tổng tương tác gộp bài đăng (gross)"
+      - name: post_interaction_net_count
+        description: "Tổng tương tác ròng bài đăng (net, loại trừ unlike/unfollow)"
+      - name: onsite_conversion_messaging_user_depth_2_message_send
+        description: "Số người dùng gửi tin nhắn lần 2 qua Messenger"
+      - name: onsite_conversion_messaging_first_reply
+        description: "Số lượt phản hồi đầu tiên qua Messenger"
+      - name: onsite_conversion_post_net_like
+        description: "Số lượt like ròng bài đăng (net)"
+      - name: onsite_conversion_messaging_conversation_replied_7d
+        description: "Số cuộc hội thoại Messenger được trả lời trong 7 ngày"
+      - name: onsite_conversion_messaging_welcome_message
+        description: "Số lượt xem Welcome Message qua Messenger"
+      - name: comment_count
+        description: "Số lượt bình luận tại vùng địa lý này"
+      - name: video_view_count
+        description: "Số lượt xem video tại vùng địa lý này"
+      - name: post_reaction_count
+        description: "Số lượt reaction bài đăng tại vùng"
+      - name: cost_per_total_messaging_connection
+        description: "Chi phí trên mỗi kết nối tin nhắn (cost_per_action_type)"
+      - name: cost_per_video_view
+        description: "Chi phí trên mỗi lượt xem video"
+      - name: cost_per_link_click
+        description: "Chi phí trên mỗi lượt click link"
+      - name: cost_per_post_interaction_gross
+        description: "Chi phí trên mỗi tương tác gộp bài đăng"
+      - name: cost_per_messaging_user_depth_2_message_send
+        description: "Chi phí trên mỗi lượt gửi tin nhắn lần 2"
+      - name: cost_per_messaging_conversation_replied_7d
+        description: "Chi phí trên mỗi cuộc hội thoại được trả lời trong 7 ngày"
+      - name: cost_per_post_engagement
+        description: "Chi phí trên mỗi tương tác bài đăng"
+      - name: cost_per_page_engagement
+        description: "Chi phí trên mỗi tương tác trang"
+      - name: cost_per_messaging_first_reply
+        description: "Chi phí trên mỗi lượt phản hồi đầu tiên qua Messenger"
+
+  - name: stg_fb_ad_metadata
+    description: >
+      Staging model: Parse metadata của từng quảng cáo (ad) Facebook từ bảng raw_fb_metadata_shared.
+      Chỉ lấy các bản ghi có _template = 'LOCATION_DETAILED_REPORT'.
+      Mỗi dòng là một ad_id duy nhất, chứa thông tin creative và trạng thái quảng cáo.
+    columns:
+      - name: id
+        description: "ID quảng cáo Facebook (primary key của model này)"
+        tests:
+          - not_null
+          - unique
+      - name: job_id
+        description: "ID của ETL job đã tạo ra bản ghi này"
+        tests:
+          - not_null
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+        tests:
+          - not_null
+      - name: name
+        description: "Tên quảng cáo"
+      - name: campaign_id
+        description: "ID campaign mà ad thuộc về"
+      - name: campaign_name
+        description: "Tên campaign mà ad thuộc về"
+      - name: adset_id
+        description: "ID nhóm quảng cáo (ad set)"
+      - name: adset_name
+        description: "Tên nhóm quảng cáo (ad set)"
+      - name: creative_id
+        description: "ID của creative được gắn vào quảng cáo"
+      - name: creative_name
+        description: "Tên creative"
+      - name: creative_body
+        description: "Nội dung văn bản chính của quảng cáo (primary text)"
+      - name: creative_title
+        description: "Tiêu đề của creative (headline)"
+      - name: creative_thumbnail_url
+        description: "URL ảnh thumbnail của creative"
+      - name: creative_link_url
+        description: "URL đích khi người dùng click vào quảng cáo"
+      - name: status
+        description: "Trạng thái quảng cáo (ACTIVE, PAUSED, ARCHIVED, ...)"
+      - name: page_name
+        description: "Tên trang Facebook chạy quảng cáo"
+      - name: actor_id
+        description: "ID trang Facebook (Page ID) chạy quảng cáo"

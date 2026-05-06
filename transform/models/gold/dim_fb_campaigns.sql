@@ -10,7 +10,7 @@ SELECT DISTINCT
     account_id,
     campaign_name,
     created_at
-FROM {{ source('marketing_analytics_silver', 'stg_fb_campaign_daily') }}
+FROM {{ ref('stg_fb_campaign_daily') }}
 
 {% if is_incremental() %}
   -- Chỉ lấy dữ liệu mới hơn thời điểm lớn nhất hiện có trong bảng

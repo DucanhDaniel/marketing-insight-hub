@@ -9,6 +9,7 @@ SELECT
     concat(JSONExtractString(data, 'id'), '_', JSONExtractString(data, 'date_start')) as surrogate_key,
     job_id, 
     created_at,
+    JSONExtractString(data, 'id') as ad_id,
     JSONExtractString(data, 'account_id') as account_id,
     JSONExtractString(data, 'account_name') as account_name,
     JSONExtractString(data, 'campaign_id') as campaign_id,
@@ -76,7 +77,7 @@ SELECT
     ) as post_reaction_count
 
 
-FROM {{ source('facebook_raw', 'raw_fb_campaign_daily_report') }}
+FROM {{ source('facebook_raw', 'raw_fb_ad_daily_report_metrics') }}
 
 {% if is_incremental() %}
   -- Chỉ lấy dữ liệu mới hơn thời điểm lớn nhất hiện có trong bảng
