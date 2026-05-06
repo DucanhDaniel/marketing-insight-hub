@@ -368,6 +368,120 @@ models:
         description: "Chi phí trên mỗi cuộc hội thoại được trả lời trong 7 ngày"
       - name: cost_per_messaging_first_reply
         description: "Chi phí trên mỗi lượt phản hồi đầu tiên qua Messenger"
+
+  - name: stg_fb_ad_set_daily
+    description: >
+      Staging model: Parse và làm sạch dữ liệu hiệu suất nhóm quảng cáo (ad set) Facebook theo ngày
+      từ bảng raw (raw_fb_ad_set_daily_report_metrics). Mỗi dòng là một cặp (adset_id, date_start) duy nhất.
+      Các trường action và cost_per_action_type được flatten ra từ mảng JSON tương ứng.
+    columns:
+      - name: surrogate_key
+        description: "Khóa tổng hợp: concat(adset_id, '_', date_start)"
+        tests:
+          - not_null
+          - unique
+      - name: job_id
+        description: "ID của ETL job đã tạo ra bản ghi này"
+        tests:
+          - not_null
+      - name: created_at
+        description: "Thời điểm job ETL ghi dữ liệu vào hệ thống"
+        tests:
+          - not_null
+      - name: adset_id
+        description: "ID nhóm quảng cáo (ad set) Facebook"
+      - name: account_id
+        description: "ID tài khoản quảng cáo Facebook"
+      - name: account_name
+        description: "Tên tài khoản quảng cáo Facebook"
+      - name: date_start
+        description: "Ngày bắt đầu khoảng báo cáo (kiểu Date)"
+      - name: date_stop
+        description: "Ngày kết thúc khoảng báo cáo (kiểu Date)"
+      - name: spend
+        description: "Tổng chi tiêu trong kỳ"
+      - name: reach
+        description: "Số người dùng duy nhất được tiếp cận"
+      - name: impressions
+        description: "Tổng số lần hiển thị quảng cáo"
+      - name: cpc
+        description: "Chi phí mỗi lượt click"
+      - name: cpm
+        description: "Chi phí trên 1000 lượt hiển thị"
+      - name: ctr
+        description: "Tỷ lệ click / hiển thị (%)"
+      - name: clicks
+        description: "Tổng số lượt click"
+      - name: frequency
+        description: "Số lần trung bình một người xem quảng cáo"
+      - name: total_messaging_connection
+        description: "Số lượt kết nối tin nhắn Messenger (flatten từ actions)"
+      - name: messaging_first_reply
+        description: "Số lượt phản hồi đầu tiên qua Messenger"
+      - name: messaging_user_depth_2_message_send
+        description: "Số người dùng gửi tin nhắn lần 2 qua Messenger"
+      - name: messaging_conversation_started_7d
+        description: "Số cuộc hội thoại Messenger bắt đầu trong 7 ngày"
+      - name: messaging_conversation_replied_7d
+        description: "Số cuộc hội thoại Messenger được trả lời trong 7 ngày"
+      - name: link_clicks
+        description: "Số lượt click vào link (flatten từ actions[action_type=link_click])"
+      - name: post_engagement_count
+        description: "Tổng tương tác bài đăng (flatten từ actions[action_type=post_engagement])"
+      - name: page_engagement
+        description: "Tổng tương tác trang (flatten từ actions[action_type=page_engagement])"
+      - name: post_interaction_gross_count
+        description: "Tổng tương tác gộp bài đăng (gross)"
+      - name: post_interaction_net_count
+        description: "Tổng tương tác ròng bài đăng (net)"
+      - name: comment_count
+        description: "Số lượt bình luận"
+      - name: post_reaction_count
+        description: "Số lượt reaction bài đăng"
+      - name: post_share_count
+        description: "Số lượt chia sẻ bài đăng"
+      - name: post_save_count
+        description: "Số lượt lưu bài đăng"
+      - name: post_net_like_count
+        description: "Số lượt like ròng bài đăng (net)"
+      - name: video_view_count
+        description: "Số lượt xem video"
+      - name: cost_per_messaging_connection
+        description: "Chi phí trên mỗi kết nối tin nhắn"
+      - name: cost_per_video_view
+        description: "Chi phí trên mỗi lượt xem video"
+      - name: cost_per_link_click
+        description: "Chi phí trên mỗi lượt click link"
+      - name: cost_per_post_interaction_gross
+        description: "Chi phí trên mỗi tương tác gộp bài đăng"
+      - name: cost_per_messaging_user_depth_2_message_send
+        description: "Chi phí trên mỗi lượt gửi tin nhắn lần 2"
+      - name: cost_per_messaging_conversation_replied_7d
+        description: "Chi phí trên mỗi cuộc hội thoại được trả lời trong 7 ngày"
+      - name: cost_per_post_engagement
+        description: "Chi phí trên mỗi tương tác bài đăng"
+      - name: cost_per_page_engagement
+        description: "Chi phí trên mỗi tương tác trang"
+      - name: cost_per_messaging_first_reply
+        description: "Chi phí trên mỗi lượt phản hồi đầu tiên qua Messenger"
+      - name: cost_per_messaging_conversation_started_7d
+        description: "Chi phí trên mỗi cuộc hội thoại Messenger bắt đầu trong 7 ngày"
+
+  - name: stg_fb_account_daily
+    description: >
+      Staging model: Parse dữ liệu hiệu suất tài khoản Facebook theo ngày từ raw_fb_account_daily_report_metrics.
+      Bao gồm actions, action_values, cost_per_action_type, purchase_roas.
+    columns:
+      - name: surrogate_key
+        tests:
+          - not_null
+          - unique
+      - name: job_id
+        tests:
+          - not_null
+      - name: created_at
+        tests:
+          - not_null
+
   - name: stg_fb_ad_set_metadata
     description: "Metadata của ad set facebook"
-

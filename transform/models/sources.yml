@@ -37,6 +37,18 @@ sources:
           - name: data
             tests:
               - not_null # Đảm bảo cột JSON không bị trống
+      - name: raw_fb_ad_set_daily_report_metrics
+        description: "Dữ liệu Facebook Ad Set Daily Report - hiệu suất theo nhóm quảng cáo (ad set) theo ngày"
+        columns:
+          - name: data
+            tests:
+              - not_null # Đảm bảo cột JSON không bị trống
+      - name: raw_fb_account_daily_report_metrics
+        description: "Dữ liệu Facebook Account Daily Report - hiệu suất theo tài khoản theo ngày"
+        columns:
+          - name: data
+            tests:
+              - not_null
       - name: raw_fb_age___gender_detailed_report_metrics
         description: "Dữ liệu facebook ad creative breakdown theo tuổi, giới tính"
         columns:
