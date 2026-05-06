@@ -1,0 +1,90 @@
+<div class="dashboard-content">
+    <div class="grid-row-2">
+        <div class="card" style="display: block; align-items: stretch;">
+            <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px;">Create Async Job</h3>
+            <form id="create-job-form" class="job-form">
+                <div class="form-group">
+                    <label for="job-task-type">Task Type</label>
+                    <select id="job-task-type" class="form-control" required>
+                        <option value="facebook_daily">Facebook Daily</option>
+                        <option value="facebook_performance">Facebook Performance</option>
+                        <option value="facebook_breakdown">Facebook Breakdown</option>
+                        <option value="creative">TikTok Creative</option>
+                        <option value="product">TikTok Product</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="fb-template-group">
+                    <label for="job-template-name">Facebook Template</label>
+                    <select id="job-template-name" class="form-control"></select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="job-start-date">Start Date</label>
+                        <input type="date" id="job-start-date" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="job-end-date">End Date</label>
+                        <input type="date" id="job-end-date" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="job-accounts">Accounts (Comma separated)</label>
+                    <input type="text" id="job-accounts" class="form-control" placeholder="e.g. act_650248897235348">
+                </div>
+
+                <div class="form-group">
+                    <label for="job-user-email">User Email</label>
+                    <input type="email" id="job-user-email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="job-access-token">Access Token</label>
+                    <input type="password" id="job-access-token" class="form-control" required>
+                    <div style="margin-top: 5px;">
+                        <input type="checkbox" id="job-save-token"> <label for="job-save-token" style="font-size: 0.85rem;">Save token to browser</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Create Job</button>
+                <div id="create-job-status" style="margin-top: 15px; font-weight: bold; font-size: 0.9rem;"></div>
+            </form>
+        </div>
+
+        <div class="card" style="display: block; align-items: stretch; height: fit-content;">
+            <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #e74c3c;">Cancel Running Job</h3>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Manually stop a job that is currently in STARTED or RUNNING status.</p>
+            <form id="cancel-job-form" class="job-form">
+                <div class="form-group">
+                    <label for="cancel-job-id">Job ID</label>
+                    <input type="text" id="cancel-job-id" class="form-control" required placeholder="Enter Job ID to cancel">
+                </div>
+                <button type="submit" class="btn btn-danger" style="width: 100%;">Cancel Job</button>
+                <div id="cancel-job-status" style="margin-top: 15px; font-weight: bold; font-size: 0.9rem;"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px; display: block;">
+        <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px;">Active Jobs Monitor</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Task Type</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="active-jobs-table-body">
+                    <tr><td colspan="6" style="text-align: center; color: #777;">No active jobs at the moment.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -5,13 +5,17 @@ Hỗ trợ cả TikTok GMV và Facebook Ads reports thông qua Worker Factory
 
 import logging
 import redis
+import os
 from dotenv import load_dotenv
-load_dotenv()
+
+if not os.path.exists('/.dockerenv') and os.path.exists('.env.dev'):
+    load_dotenv('.env.dev', override=True)
+else:
+    load_dotenv()
 
 from celery import Celery
 from celery.signals import task_prerun, task_postrun
 from typing import Dict, Any
-import os
 from datetime import datetime, timezone
 import io
 

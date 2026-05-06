@@ -1,4 +1,7 @@
 ## KHI DEV
+
+Cần chạy celery, mongo, main, clickhouse docker
+
 Chạy Celery
 celery -A workers.tasks_modular.celery_app worker --loglevel=info -P solo
 
@@ -20,3 +23,5 @@ uv run --env-file ../.env dbt docs generate
 
 Chạy dbt để serve documentation
 uv run --env-file ../.env dbt docs serve
+
+Có hai file .env và .env.dev

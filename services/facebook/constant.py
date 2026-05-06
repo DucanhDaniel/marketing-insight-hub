@@ -620,7 +620,7 @@ FACEBOOK_REPORT_TEMPLATES_STRUCTURE = [
            ],
          },
          "insight_fields": [
-           "id", "name", "account_currency",
+           "account_currency",
            "spend",
            "impressions",
            "clicks",

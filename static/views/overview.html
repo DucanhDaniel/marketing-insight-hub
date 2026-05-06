@@ -1,0 +1,128 @@
+<div class="dashboard-content">
+    <div class="summary-cards">
+        <div class="card">
+            <div class="card-icon green"><i class="fas fa-tasks"></i></div>
+            <div class="card-info">
+                <h3>Total Tasks</h3>
+                <p id="total-tasks">Loading...</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon blue"><i class="fas fa-check-circle"></i></div>
+            <div class="card-info">
+                <h3>Successful</h3>
+                <p id="successful-tasks">Loading...</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon orange"><i class="fas fa-chart-line"></i></div>
+            <div class="card-info">
+                <h3>Success Rate</h3>
+                <p id="success-rate">Loading...</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon purple"><i class="fas fa-envelope"></i></div>
+            <div class="card-info">
+                <h3>Total Emails</h3>
+                <p id="total-emails">Loading...</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon grey"><i class="fas fa-clock"></i></div>
+            <div class="card-info">
+                <h3>Avg Duration</h3>
+                <p id="avg-duration">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row-3">
+        <div class="chart-container">
+            <h3>Task Status Breakdown</h3>
+            <div class="chart-wrapper">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3>Task Type Breakdown</h3>
+            <div class="chart-wrapper">
+                <canvas id="endpointChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3>Top Users (Failed Tasks)</h3>
+            <p style="font-size: 11px; color: #999; margin: 0 0 6px;">Click vào email để xem chi tiết</p>
+            <div class="table-wrapper-small" style="height: 250px; overflow-y: auto;">
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Failed</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-failed-users-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row-2-bias">
+        <div class="chart-container">
+            <h3>Top Users by Task Volume</h3>
+            <div class="chart-wrapper-wide">
+                <canvas id="userChart"></canvas>
+            </div>
+        </div>
+        <div class="table-container small-table">
+            <h3>Top Users Detail</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User Email</th>
+                        <th>Tasks</th>
+                    </tr>
+                </thead>
+                <tbody id="top-users-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="table-section">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+            <h3 style="margin: 0;">Recent Tasks Log (Max 1000 tasks)</h3>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <label for="task-status-filter" style="font-weight: 600;">Filter Status:</label>
+                <select id="task-status-filter" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="all">All Status</option>
+                    <option value="SUCCESS">✅ SUCCESS</option>
+                    <option value="FAILED">❌ FAILED</option>
+                    <option value="STARTED">🔄 STARTED</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-delete-selected" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;" disabled>Delete Selected</button>
+                <button id="btn-delete-all" class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85rem;">Delete All</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="master-checkbox"></th>
+                    <th>Job ID</th>
+                    <th>Task Type</th>
+                    <th>User Email</th>
+                    <th>Status</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration (s)</th>
+                    <th>Message</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="tasks-table-body"></tbody>
+        </table>
+    </div>
+</div>

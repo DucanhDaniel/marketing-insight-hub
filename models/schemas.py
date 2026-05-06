@@ -21,6 +21,9 @@ class CreateJobRequest(BaseModel):
     user_email: str
     
     # --- ELT ClickHouse Fields ---
-    destination: str = "clickhouse"
-    
-    selected_fields: List[str] = Field(default_factory=list)
+    destination: Optional[str] = "clickhouse"
+    selected_fields: Optional[List[str]] = None
+
+class DeleteTaskLogsRequest(BaseModel):
+    job_ids: Optional[List[str]] = None
+    delete_all: Optional[bool] = False

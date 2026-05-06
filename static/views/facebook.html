@@ -1,0 +1,67 @@
+<div class="dashboard-content">
+    <div class="summary-cards">
+        <div class="card">
+            <div class="card-icon blue"><i class="fab fa-facebook-f"></i></div>
+            <div class="card-info">
+                <h3>Total Facebook Tasks</h3>
+                <p id="fb-total-tasks">0</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon green"><i class="fas fa-check"></i></div>
+            <div class="card-info">
+                <h3>Successful Batches</h3>
+                <p id="fb-success-batches">0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row-2-bias">
+        <div class="chart-container">
+            <h3>Facebook Usage Details</h3>
+            <div class="chart-wrapper-wide">
+                <canvas id="fbUsageChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container" style="display: flex; flex-direction: column;">
+            <h3>Backoff Statistics</h3>
+            <div style="flex-grow: 1; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                <h1 id="fb-total-backoff" style="font-size: 3rem; color: #e74c3c; margin: 0;">0s</h1>
+                <p>Total Backoff Time</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-row-2">
+        <div class="chart-container">
+            <h3>Task Type Breakdown</h3>
+            <div class="chart-wrapper">
+                <canvas id="fbTypeChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3>Success Rate</h3>
+            <div class="chart-wrapper">
+                <canvas id="fbStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-section">
+        <h3>Facebook Recent Tasks</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Template</th>
+                    <th>User Email</th>
+                    <th>Status</th>
+                    <th>Backoff (s)</th>
+                    <th>Batches</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody id="fb-tasks-body"></tbody>
+        </table>
+    </div>
+</div>

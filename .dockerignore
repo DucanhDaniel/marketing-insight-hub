@@ -26,6 +26,7 @@ experiment.py
 tiktok/
 
 .env
+.env.dev
 
 *.json
 
