@@ -1,24 +1,24 @@
 # Hướng dẫn Thêm Module Mới (New Platform Integration)
 
-Tài liệu này hướng dẫn quy trình thêm một module mới (ví dụ: `Google Ads`, `TikTok Ads`) vào hệ thống report server, tương đương với module `facebook` hiện tại.
+Tài liệu này hướng dẫn quy trình thêm một module mới (ví dụ: `Google Ads`, `Twitter Ads`) vào hệ thống report server theo cấu trúc module `ingestion` mới.
 
 Quy trình gồm 3 bước chính:
 
-1.  **Service Layer**: Viết logic lấy dữ liệu từ API.
-2.  **Worker Layer**: Viết Worker để điều phối việc lấy data, xử lý cache và ghi sheet.
-3.  **Registry**: Đăng ký Worker mới vào Factory.
+1.  **Connector Layer**: Viết logic lấy dữ liệu từ API.
+2.  **Worker Layer**: Viết Worker để điều phối việc lấy data, xử lý cache và đẩy vào Data Warehouse (ClickHouse).
+3.  **Registry**: Đăng ký Worker mới vào Factory trung tâm.
 
 ---
 
-## 1. Service Layer (Logic lấy dữ liệu)
+## 1. Connector Layer (Logic lấy dữ liệu)
 
-Tạo thư mục mới trong `services/`, ví dụ `services/google_ads/`.
-Tạo file `google_processor.py` chứa class xử lý việc gọi API.
+Tạo thư mục mới trong `ingestion/connectors/`, ví dụ `ingestion/connectors/google_ads/`.
+Tạo file `processor.py` chứa class xử lý việc gọi API.
 
 **Cấu trúc khuyến nghị:**
 
 ```python
-# services/google_ads/google_processor.py
+# ingestion/connectors/google_ads/processor.py
 
 class GoogleAdsReporter:
     def __init__(self, api_key, progress_callback=None):
@@ -64,6 +64,7 @@ class GoogleAdsReporter:
 
     def _fetch_from_api(self, start_date, end_date):
         # Logic gọi API thực tế
+        # Cập nhật self.api_usage tại đây
         # return [{"date": "2024-01-01", "clicks": 100, ...}]
         pass
 ```
@@ -73,22 +74,20 @@ class GoogleAdsReporter:
 >
 > 1.  **Tracking theo thời gian thực (Real-time):** Bạn cần truyền tham số `api_usage` vào hàm `progress_callback` như ví dụ trên để hệ thống cập nhật DB liên tục khi task đang chạy.
 > 2.  **Tổng hợp cuối cùng (Final Aggregation):** Ngay cả khi bạn *không* truyền vào callback, Worker vẫn sẽ tự động lấy giá trị từ thuộc tính `self.api_usage` của Reporter khi task kết thúc để lưu lần cuối.
->
-> **Khuyên dùng:** Hay khai báo `self.api_usage` trong `__init__` và cập nhật nó đầy đủ. Việc truyền vào callback là tùy chọn nhưng được khuyến khích để theo dõi tiến độ tốt hơn.
 
 ---
 
-## 2. Worker Layer (Celery Worker)
+## 2. Worker Layer (Ingestion Worker)
 
-Tạo file worker mới trong `workers/`, ví dụ `workers/google_ads_worker.py`.
+Tạo file `worker.py` trong thư mục connector của bạn, ví dụ `ingestion/connectors/google_ads/worker.py`.
 Class này **BẮT BUỘC** phải kế thừa từ `BaseReportWorker`.
 
 ```python
-# workers/google_ads_worker.py
+# ingestion/connectors/google_ads/worker.py
 
 from typing import Dict, List, Any
-from .base_report_worker import BaseReportWorker
-from services.google_ads.google_processor import GoogleAdsReporter
+from ingestion.core.base_worker import BaseReportWorker
+from .processor import GoogleAdsReporter
 
 class GoogleAdsWorker(BaseReportWorker):
     
@@ -100,7 +99,7 @@ class GoogleAdsWorker(BaseReportWorker):
         )
     
     def _get_collection_name(self) -> str:
-        """Tên collection MongoDB để lưu cache"""
+        """Tên collection MongoDB để lưu cache (nếu cần)"""
         return "google_ads_daily_reports"
     
     def _get_cache_query(self, chunk: Dict[str, str]) -> Dict:
@@ -113,21 +112,20 @@ class GoogleAdsWorker(BaseReportWorker):
     
     def _flatten_data(self, raw_data: List[Dict], context: Dict) -> List[Dict]:
         """
-        Chuyển đổi dữ liệu Raw từ API thành dạng phẳng (Flat Dict) để ghi vào Google Sheet.
-        Mỗi dict trong list trả về sẽ là một dòng trong Sheet.
+        Chuyển đổi dữ liệu Raw từ API thành dạng phẳng (Flat Dict).
+        Hệ thống ELT sẽ dùng kết quả này để đẩy vào ClickHouse.
         """
         flattened = []
         for item in raw_data:
             row = {
-                "Date": item.get("date"),
-                "Campaign Name": item.get("campaign", {}).get("name"),
-                "Impressions": item.get("metrics", {}).get("impressions"),
-                "Spend": item.get("metrics", {}).get("cost"),
-                # Thêm các trường cần thiết để khớp với _get_cache_query và Cache logic
-                # (Quan trọng để Cache Hit hoạt động đúng)
+                "date": item.get("date"),
                 "account_id": context.get("account_id"),
-                "start_date": item.get("date"),
-                "end_date": item.get("date"),
+                "campaign_name": item.get("campaign", {}).get("name"),
+                "impressions": int(item.get("metrics", {}).get("impressions", 0)),
+                "spend": float(item.get("metrics", {}).get("cost", 0)),
+                # Thêm các trường metadata cho ELT
+                "start_date": context.get("start_date"),
+                "end_date": context.get("end_date")
             }
             flattened.append(row)
         return flattened
@@ -137,24 +135,27 @@ class GoogleAdsWorker(BaseReportWorker):
 
 ## 3. Registry (Đăng ký Worker)
 
-Mở file `workers/worker_factory.py` và đăng ký worker mới.
+Mở file `ingestion/core/factory.py` và đăng ký worker mới vào `WORKER_REGISTRY`.
 
 ```python
-# workers/worker_factory.py
+# ingestion/core/factory.py
 
 # 1. Import Worker mới
-from .google_ads_worker import GoogleAdsWorker
+from ingestion.connectors.google_ads.worker import GoogleAdsWorker
 
 class WorkerFactory:
     
     WORKER_REGISTRY = {
         "facebook_daily": FacebookDailyWorker,
+        "facebook_performance": FacebookPerformanceWorker,
         # ... các worker cũ
         
         # 2. Thêm Key vào Registry
         "google_ads": GoogleAdsWorker, 
     }
 ```
+
+---
 
 ## 4. Sử dụng
 
@@ -165,49 +166,40 @@ context = {
     "job_id": "job_123",
     "task_id": "task_abc",
     "task_type": "google_ads",  # Khớp với key trong Registry
-    "spreadsheet_id": "...",
+    "user_email": "admin@example.com",
     "start_date": "2024-01-01",
     "end_date": "2024-01-31",
     "api_key": "...",
-    # ...
+    # ... các params khác cần cho connector
 }
 run_report_job.delay(context)
 ```
+
+---
 
 ## Tóm tắt luồng chạy (BaseReportWorker)
 
 Hệ thống sẽ tự động thực hiện các bước sau khi bạn kế thừa `BaseReportWorker`:
 
-1.  **Initialize**: Gọi `_create_reporter`.
-2.  **Check Cache**: Dùng `_get_cache_query` để tìm dữ liệu có sẵn trong DB.
-3.  **Fetch API**: Với những khoảng thời gian chưa có cache, gọi `reporter.get_data()`.
-4.  **Flatten**: Gọi `_flatten_data` để chuẩn hóa dữ liệu API.
-5.  **Save Cache**: Lưu dữ liệu mới fetch được vào DB (`_get_collection_name`).
-6.  **Write Sheet**: Ghi tất cả dữ liệu (Cache + New) vào Google Sheet.
-7.  **Logging**: Tự động update progress và API usage (nếu reporter có gửi `api_usage`).
+1.  **Initialize**: Gọi `_create_reporter()`.
+2.  **Fetch API**: Gọi `reporter.get_data(date_chunks)`.
+3.  **Flatten**: Gọi `_flatten_data()` để chuẩn hóa dữ liệu API.
+4.  **Load Data Warehouse**: Tự động đẩy dữ liệu đã flatten vào ClickHouse thông qua `ClickHouseWriter`.
+5.  **Save Cache**: Lưu dữ liệu vào MongoDB (nếu được cấu hình).
+6.  **Logging**: Tự động cập nhật progress và API usage vào MongoDB `task_logs`.
 
----
+## 5. Cấu trúc Thư mục Ingestion
 
-## 5. Database Schema (`task_logs`)
-
-Khi một task được chạy, hệ thống sẽ tự động ghi log vào collection `task_logs` trong MongoDB. Dưới đây là các fields quan trọng:
-
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `_id` | ObjectId | MongoDB ID tự sinh. |
-| `job_id` | String | ID duy nhất của job (do client tạo). |
-| `celery_task_id` | String | ID của Celery Task. |
-| `task_type` | String | Loại task (e.g., `facebook_daily`, `google_ads`). |
-| `user_email` | String | Email người yêu cầu. |
-| `status` | String | Trạng thái hiện tại: `STARTED`, `RUNNING`, `SUCCESS`, `FAILED`, `CANCELLED`. |
-| `date_start` | String | Ngày bắt đầu lấy dữ liệu (YYYY-MM-DD). |
-| `date_stop` | String | Ngày kết thúc lấy dữ liệu (YYYY-MM-DD). |
-| `start_time` | Date | Thời gian task bắt đầu chạy. |
-| `end_time` | Date | Thời gian task kết thúc. |
-| `duration_seconds` | Float | Tổng thời gian chạy (giây). |
-| `message` | String | Thông báo trạng thái hoặc lỗi cuối cùng. |
-| `api_total_counts` | Object | Thông tin sử dụng API (Request count, rows written...). Được cập nhật realtime nếu Reporter gửi lên. |
-| `full_logs` | String | Toàn bộ log text (stdout/stderr) của task. |
-| `accounts` | Array | (Optional) Danh sách accounts được xử lý. |
-| `template_name` | String | (Optional) Tên template báo cáo. |
-
+```
+ingestion/
+├── core/
+│   ├── base_worker.py    # Logic ELT chung
+│   └── factory.py        # Đăng ký và tạo worker
+├── connectors/           # Chứa các nền tảng (Facebook, TikTok, v.v.)
+│   └── [platform]/
+│       ├── worker.py     # Worker kế thừa BaseReportWorker
+│       └── processor.py  # Logic API client
+├── db/                   # Database clients (Mongo, ClickHouse)
+├── writers/              # Logic ghi dữ liệu (ClickHouseWriter)
+└── utils/                # Tiện ích dùng chung
+```

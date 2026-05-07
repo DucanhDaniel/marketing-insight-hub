@@ -7,8 +7,8 @@ import logging
 from typing import Dict, Any, List, Callable, Optional
 from datetime import datetime, date, timedelta, timezone
 from abc import ABC, abstractmethod
-from services.database.clickhouse_client import ClickHouseClient
-from services.clickhouse_writer.clickhouse_writer import ClickHouseWriter
+from ingestion.db.clickhouse import ClickHouseClient
+from ingestion.writers.clickhouse import ClickHouseWriter
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class BaseReportWorker(ABC):
     
     def _check_cancellation(self):
         """Check if job was cancelled"""
-        from services.exceptions import TaskCancelledException
+        from ingestion.exceptions import TaskCancelledException
         
         cancel_key = f"job:{self.job_id}:cancel_requested"
         if self.redis_client and self.redis_client.exists(cancel_key):

@@ -3,9 +3,9 @@ import time
 import random
 from datetime import datetime, date, timedelta, timezone
 from calendar import monthrange
-from ..exceptions import TaskCancelledException
+from ingestion.exceptions import TaskCancelledException
 from concurrent.futures import ThreadPoolExecutor
-from ..rate_limiter.rate_limiter import RedisRateLimiter
+from ingestion.utils.rate_limiter import RedisRateLimiter
 from collections import defaultdict
 
 class GMVReporter:

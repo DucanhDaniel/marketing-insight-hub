@@ -2,7 +2,7 @@
 
 **Version:** 1.0
 **Last Updated:** 2026-02-03
-**Module:** `services/facebook/daily_processor.py`
+**Module:** `ingestion/connectors/facebook/daily_processor2.py`
 
 ---
 
@@ -94,7 +94,7 @@ User Selects Fields
 
 **Use Case:** Adding metadata fields like bid info, status, creative properties
 
-**Location:** `services/facebook/constant.py` → Template config → `ad_fields` or `adset_fields`
+**Location:** `ingestion/connectors/facebook/constant.py` → Template config → `ad_fields` or `adset_fields`
 
 **Steps:**
 
@@ -138,7 +138,7 @@ if item.get("adset"):
 
 **Use Case:** Adding simple performance metrics (scalar values)
 
-**Location:** `services/facebook/constant.py` → Template config → `insight_fields`
+**Location:** `ingestion/connectors/facebook/constant.py` → Template config → `insight_fields`
 
 **Steps:**
 
@@ -186,7 +186,7 @@ if item.get("adset"):
 
 #### Step 1: Add to CONVERSION_METRICS_MAP
 
-**Location:** `services/facebook/constant.py`
+**Location:** `ingestion/connectors/facebook/constant.py`
 
 ```python
 CONVERSION_METRICS_MAP = {
@@ -263,7 +263,7 @@ Code automatically:
 
 ## 📁 Configuration Files
 
-### File: `services/facebook/constant.py`
+### File: `ingestion/connectors/facebook/constant.py`
 
 **Structure:**
 
@@ -499,7 +499,7 @@ When adding new fields, test with 1-day range before running full reports.
 
 ### 6. Check Facebook API Version
 
-Some fields are only available in newer API versions. Update `API_VERSION` in `base_processor.py` if needed.
+Some fields are only available in newer API versions. Update `API_VERSION` in `ingestion/connectors/facebook/base_processor.py` if needed.
 
 ---
 
@@ -609,9 +609,9 @@ logger.debug(f"Raw data: {row.get(parent_field)}")
 - [Ad Object](https://developers.facebook.com/docs/marketing-api/reference/adgroup/)
 
 ### Related Files
-- `services/facebook/constant.py` - Configuration
-- `services/facebook/daily_processor.py` - Processing logic
-- `services/facebook/base_processor.py` - Base API calls
+- `ingestion/connectors/facebook/constant.py` - Configuration
+- `ingestion/connectors/facebook/daily_processor2.py` - Processing logic
+- `ingestion/connectors/facebook/base_processor.py` - Base API calls
 
 ### Key Functions
 - `_create_nested_level_url()` - Builds API request

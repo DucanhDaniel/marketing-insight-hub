@@ -11,8 +11,8 @@ from .constant import FACEBOOK_REPORT_TEMPLATES_STRUCTURE
 from datetime import datetime, timedelta
 from collections import defaultdict
 import logging
-from services.facebook.err_handler.rate_limit import EnhancedBackoffHandler
-from services.facebook.utils.batch_sender import send_batch_request
+from .err_handler.rate_limit import EnhancedBackoffHandler
+from .utils.batch_sender import send_batch_request
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

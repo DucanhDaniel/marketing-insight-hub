@@ -3,11 +3,11 @@ Facebook Ads Report Workers
 """
 
 from typing import Dict, Any, List
-from workers.base_report_worker import BaseReportWorker
-from services.facebook.generic_processor import FacebookPerformanceReporter
-from services.facebook.breakdown_processor import FacebookBreakdownReporter
-from services.facebook.daily_processor2 import FacebookDailyReporterV2
-from services.facebook.constant import get_all_selectable_fields
+from ingestion.core.base_worker import BaseReportWorker
+from .generic_processor import FacebookPerformanceReporter
+from .breakdown_processor import FacebookBreakdownReporter
+from .daily_processor2 import FacebookDailyReporterV2
+from .constant import get_all_selectable_fields
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -91,7 +91,7 @@ class FacebookAdsWorker(BaseReportWorker):
                     accounts_to_process.append({"id": acc, "name": f"Account {acc}"})
                 else:
                     accounts_to_process.append(acc)
-
+            
             # Reporter now returns either a List (Performance/Breakdown) or a Dict (Daily)
             result = reporter.get_report(
                 accounts_to_process=accounts_to_process,
@@ -218,5 +218,3 @@ class FacebookBreakdownWorker(FacebookAdsWorker):
             progress_callback=self._send_progress,
             job_id=self.job_id
         )
-        
-    

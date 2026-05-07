@@ -8,10 +8,10 @@ Two-Phase Fetching Strategy với ID-based metadata:
 """
 
 from typing import List, Dict, Any, Optional, Set
-from services.facebook.base_processor import FacebookAdsBaseReporter
+from .base_processor import FacebookAdsBaseReporter
 import logging
 import json
-from services.facebook.constant import EFFECTIVE_STATUS_FILTERS
+from .constant import EFFECTIVE_STATUS_FILTERS
 
 logger = logging.getLogger(__name__)
 

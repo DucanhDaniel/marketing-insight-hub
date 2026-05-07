@@ -3,12 +3,12 @@ TikTok GMV Report Workers
 """
 
 from typing import Dict, Any, List
-from workers.base_report_worker import BaseReportWorker
-from services.gmv.campaign_creative_detail import (
+from ingestion.core.base_worker import BaseReportWorker
+from .campaign_creative_detail import (
     GMVCampaignCreativeDetailReporter, 
     _flatten_creative_report
 )
-from services.gmv.campaign_product_detail import (
+from .campaign_product_detail import (
     GMVCampaignProductDetailReporter,
     _flatten_product_report
 )

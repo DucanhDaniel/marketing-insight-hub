@@ -6,7 +6,7 @@ from workers.tasks_modular import run_report_job
 
 from models.schemas import CreateJobRequest, DeleteTaskLogsRequest
 from fastapi.middleware.cors import CORSMiddleware
-from services.database.mongo_client import MongoDbClient
+from ingestion.db.mongo import MongoDbClient
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 import os 

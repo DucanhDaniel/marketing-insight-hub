@@ -98,6 +98,3 @@ class MongoDbClient:
             print("✅ Các index truy vấn đã sẵn sàng.")
         except Exception as e:
             print(f"⚠️ Lỗi khi tạo index: {e}")
-            
-            
-    

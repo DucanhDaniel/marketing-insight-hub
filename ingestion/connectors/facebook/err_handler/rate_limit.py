@@ -6,7 +6,7 @@
 import time
 import logging
 from typing import Dict, Any, List
-from services.facebook.err_handler.facebook_error_handler import FacebookErrorHandler, FacebookErrorType
+from .facebook_error_handler import FacebookErrorHandler, FacebookErrorType
 
 logger = logging.getLogger(__name__)
 

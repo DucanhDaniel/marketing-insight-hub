@@ -19,9 +19,9 @@ from typing import Dict, Any
 from datetime import datetime, timezone
 import io
 
-from .worker_factory import WorkerFactory
-from services.exceptions import TaskCancelledException 
-from services.database.mongo_client import MongoDbClient
+from ingestion.core.factory import WorkerFactory
+from ingestion.exceptions import TaskCancelledException 
+from ingestion.db.mongo import MongoDbClient
 
 # ==================== CONFIG ====================
 

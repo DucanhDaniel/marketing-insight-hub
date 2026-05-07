@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Any
 from datetime import datetime, timezone, timedelta
-from services.database.mongo_client import MongoDbClient
+from ingestion.db.mongo import MongoDbClient
 import redis
 
 logger = logging.getLogger(__name__)

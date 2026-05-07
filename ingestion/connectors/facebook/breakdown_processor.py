@@ -5,10 +5,10 @@ Examples: age, gender, placement, country, device, etc.
 """
 
 from typing import List, Dict, Any, Optional
-from services.facebook.base_processor import FacebookAdsBaseReporter
+from .base_processor import FacebookAdsBaseReporter
 import logging
 import json, time
-from services.facebook.constant import FACEBOOK_REPORT_TEMPLATES_STRUCTURE
+from .constant import FACEBOOK_REPORT_TEMPLATES_STRUCTURE
 from .helper import write_to_file
 
 
@@ -307,7 +307,7 @@ class FacebookBreakdownReporter(FacebookAdsBaseReporter):
             logger.info(f"\n➤ Retry batch of {len(current_batch)} items")
             
             try:
-                from services.facebook.utils.batch_sender import send_batch_request
+                from .utils.batch_sender import send_batch_request
                 response_json = send_batch_request(
                     relative_urls=batch_urls,
                     access_token=self.access_token,

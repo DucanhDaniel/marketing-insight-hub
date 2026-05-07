@@ -6,9 +6,9 @@ Tạo worker instance dựa trên task_type
 from typing import Dict, Any, Callable
 from typing import List
 
-from .base_report_worker import BaseReportWorker
-from .tiktok_gmv_worker import TikTokGMVCreativeWorker, TikTokGMVProductWorker
-from .facebook_ads_worker import FacebookDailyWorker, FacebookPerformanceWorker, FacebookBreakdownWorker
+from .base_worker import BaseReportWorker
+from ingestion.connectors.tiktok.worker import TikTokGMVCreativeWorker, TikTokGMVProductWorker
+from ingestion.connectors.facebook.worker import FacebookDailyWorker, FacebookPerformanceWorker, FacebookBreakdownWorker
 
 
 class WorkerFactory:
@@ -84,4 +84,3 @@ class WorkerFactory:
             raise TypeError(f"{worker_class} must inherit from BaseReportWorker")
         
         cls.WORKER_REGISTRY[task_type] = worker_class
-

@@ -24,7 +24,7 @@ Need to add a field?
 
 **When:** Adding metadata (bid, budget, status, creative info)
 
-**File:** `constant.py` → Template → `ad_fields`
+**File:** `ingestion/connectors/facebook/constant.py` → Template → `ad_fields`
 
 **Template:**
 ```python
@@ -33,7 +33,7 @@ Need to add a field?
 ]
 ```
 
-**Response Processing:** `daily_processor.py` → `_process_nested_level_response()`
+**Response Processing:** `ingestion/connectors/facebook/daily_processor2.py` → `_process_nested_level_response()`
 ```python
 if item.get("adset"):
     parent_info["adset_NEW_FIELD"] = item["adset"].get("NEW_FIELD")
@@ -45,7 +45,7 @@ if item.get("adset"):
 
 **When:** Adding simple performance metric
 
-**File:** `constant.py` → Template → `insight_fields` + `selectable_fields`
+**File:** `ingestion/connectors/facebook/constant.py` → Template → `insight_fields` + `selectable_fields`
 
 **Template:**
 ```python
@@ -63,7 +63,7 @@ if item.get("adset"):
 
 **When:** Metric needs mapping (actions, video, conversions)
 
-**Step 1:** `constant.py` → `CONVERSION_METRICS_MAP`
+**Step 1:** `ingestion/connectors/facebook/constant.py` → `CONVERSION_METRICS_MAP`
 ```python
 "Friendly Name": {
   "api_field": "parent_field:action_type",  # or just "field_name"

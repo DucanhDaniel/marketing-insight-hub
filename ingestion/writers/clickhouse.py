@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 import json
 from typing import List, Dict, Any
-from services.database.clickhouse_client import ClickHouseClient
+from ingestion.db.clickhouse import ClickHouseClient
 
 logger = logging.getLogger(__name__)
 
