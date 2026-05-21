@@ -5,8 +5,6 @@ services:
     image: mongo:latest
     container_name: my-mongo-db
     restart: always
-    ports:
-      - "27018:27017" # Ánh xạ ra cổng 27018 ở máy thật
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
@@ -29,8 +27,6 @@ services:
     image: redis:latest
     container_name: my-redis-server
     restart: always
-    ports:
-      - "6379:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
@@ -126,9 +122,6 @@ services:
       retries: 3
     labels:
       - "autoheal=true"
-    networks:
-      - nifi-network
-      - default
 
   superset-init:
     image: apache/superset:latest
@@ -280,6 +273,3 @@ volumes:
   superset-home:
   postgres-db-volume:
 
-networks:
-  nifi-network:
-    external: true
