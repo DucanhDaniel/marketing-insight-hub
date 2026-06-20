@@ -6,21 +6,28 @@
     incremental_strategy='delete+insert'
 )}}
 
-SELECT 
-    job_id, 
-    created_at,
-    JSONExtractString(data, 'id') as id,
-    JSONExtractString(data, 'name') as name,
-    JSONExtractString(data, 'campaign_id') as campaign_id,
-    JSONExtractString(data, 'campaign_name') as campaign_name
+WITH raw_extracted AS (
+    SELECT 
+        job_id, 
+        created_at,
+        JSONExtractString(data, 'id') as id,
+        JSONExtractString(data, 'name') as name,
+        JSONExtractString(data, 'campaign_id') as campaign_id,
+        JSONExtractString(data, 'campaign_name') as campaign_name
 
-FROM {{ source('facebook_raw', 'raw_fb_metadata_shared') }}
+    FROM {{ source('facebook_raw', 'raw_fb_metadata_shared') }}
 
-WHERE 
-  (
-    JSONExtractString(data, '_template') = 'Ad Set Daily Report'
-  )
+    WHERE 
+      (
+        JSONExtractString(data, '_template') = 'Ad Set Daily Report'
+      )
 
-{% if is_incremental() %}
-  AND created_at > (SELECT max(created_at) FROM {{ this }})
-{% endif %}
+    {% if is_incremental() %}
+      AND created_at > (SELECT max(created_at) FROM {{ this }})
+    {% endif %}
+)
+
+SELECT * 
+FROM raw_extracted
+ORDER BY created_at DESC
+LIMIT 1 BY id
