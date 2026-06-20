@@ -67,6 +67,31 @@
         </div>
     </div>
 
+    <div class="grid-row-2" style="margin-top: 20px;">
+        <div class="card" style="display: block; align-items: stretch; height: fit-content;">
+            <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #3498db;">Trigger Airflow DAG Backfill</h3>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Trigger a historical data backfill using an Airflow DAG.</p>
+            <form id="airflow-backfill-form" class="job-form">
+                <div class="form-group">
+                    <label for="backfill-dag-id">DAG ID</label>
+                    <input type="text" id="backfill-dag-id" class="form-control" value="facebook_ingestion_pipeline" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="backfill-start-date">Start Date</label>
+                        <input type="date" id="backfill-start-date" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="backfill-end-date">End Date</label>
+                        <input type="date" id="backfill-end-date" class="form-control" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; background: #3498db;">Trigger Backfill</button>
+                <div id="backfill-job-status" style="margin-top: 15px; font-weight: bold; font-size: 0.9rem;"></div>
+            </form>
+        </div>
+    </div>
+
     <div class="card" style="margin-top: 20px; display: block;">
         <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px;">Active Jobs Monitor</h3>
         <div class="table-responsive">

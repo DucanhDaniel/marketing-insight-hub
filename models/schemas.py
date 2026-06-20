@@ -27,3 +27,8 @@ class CreateJobRequest(BaseModel):
 class DeleteTaskLogsRequest(BaseModel):
     job_ids: Optional[List[str]] = None
     delete_all: Optional[bool] = False
+
+class AirflowBackfillRequest(BaseModel):
+    dag_id: str
+    start_date: str
+    end_date: str

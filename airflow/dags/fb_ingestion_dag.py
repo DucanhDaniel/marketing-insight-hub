@@ -19,14 +19,19 @@ def trigger_facebook_ingestion(template_name, task_type, **kwargs):
     api_url = "http://api:8011/reports/create-job"
     access_token = os.getenv("FACEBOOK_ACCESS_TOKEN", "")
     
-    # Mặc định lấy dữ liệu của ngày hôm qua
-    ds = kwargs.get('ds')
-    if not ds:
-        ds = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-        
-    end_date = ds
-    end_dt = datetime.strptime(ds, "%Y-%m-%d")
-    start_date = (end_dt - timedelta(days=30)).strftime("%Y-%m-%d")
+    dag_run = kwargs.get('dag_run')
+    if dag_run and dag_run.conf and 'start_date' in dag_run.conf and 'end_date' in dag_run.conf:
+        start_date = dag_run.conf['start_date']
+        end_date = dag_run.conf['end_date']
+    else:
+        # Mặc định lấy dữ liệu của ngày hôm qua
+        ds = kwargs.get('ds')
+        if not ds:
+            ds = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+            
+        end_date = ds
+        end_dt = datetime.strptime(ds, "%Y-%m-%d")
+        start_date = (end_dt - timedelta(days=30)).strftime("%Y-%m-%d")
     
     payload = {
         "task_type": task_type,
@@ -36,12 +41,12 @@ def trigger_facebook_ingestion(template_name, task_type, **kwargs):
         "start_date": start_date,
         "end_date": end_date,
         "template_name": template_name,
-        "accounts": ["act_948290596967304"],
+        "accounts": ["act_542712186951432"],
         "user_email": "airflow@marketing.local",
         "destination": "clickhouse"
     }
     
-    logging.info(f"Triggering {template_name} via {api_url} for date {ds}")
+    logging.info(f"Triggering {template_name} via {api_url} for dates {start_date} to {end_date}")
     response = requests.post(api_url, json=payload)
     
     if not response.ok:

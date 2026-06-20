@@ -27,16 +27,10 @@ with DAG(
         bash_command='cd /opt/airflow/transform && /opt/airflow/dbt_venv/bin/dbt debug --profiles-dir .',
     )
 
-    # Task to run dbt models
-    dbt_run = BashOperator(
-        task_id='dbt_run',
-        bash_command='cd /opt/airflow/transform && /opt/airflow/dbt_venv/bin/dbt run --profiles-dir .',
+    # Task to build dbt models
+    dbt_build = BashOperator(
+        task_id='dbt_build',
+        bash_command='cd /opt/airflow/transform && /opt/airflow/dbt_venv/bin/dbt build --profiles-dir .',
     )
 
-    # Task to test dbt models
-    dbt_test = BashOperator(
-        task_id='dbt_test',
-        bash_command='cd /opt/airflow/transform && /opt/airflow/dbt_venv/bin/dbt test --profiles-dir .',
-    )
-
-    dbt_debug >> dbt_run >> dbt_test
+    dbt_debug >> dbt_build

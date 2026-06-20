@@ -4,7 +4,8 @@ from typing import Optional, List, Dict
 import redis
 from workers.tasks_modular import run_report_job
 
-from models.schemas import CreateJobRequest, DeleteTaskLogsRequest
+import requests
+from models.schemas import CreateJobRequest, DeleteTaskLogsRequest, AirflowBackfillRequest
 from fastapi.middleware.cors import CORSMiddleware
 from ingestion.db.mongo import MongoDbClient
 from fastapi.staticfiles import StaticFiles
@@ -186,3 +187,35 @@ def delete_tasks_endpoint(request: DeleteTaskLogsRequest):
     except Exception as e:
         logger.error(f"Error deleting tasks: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/airflow/backfill", tags=["Airflow"])
+def trigger_airflow_backfill(request: AirflowBackfillRequest):
+    """Trigger an Airflow DAG run for backfill purposes."""
+    dag_id = request.dag_id
+    # Endpoint to Airflow REST API (assuming airflow-webserver is accessible within docker network)
+    airflow_url = f"http://airflow-webserver:8080/api/v1/dags/{dag_id}/dagRuns"
+    
+    payload = {
+        "conf": {
+            "start_date": request.start_date,
+            "end_date": request.end_date
+        }
+    }
+    
+    try:
+        # Default auth defined in docker-compose: airflow/airflow
+        response = requests.post(airflow_url, json=payload, auth=("airflow", "airflow"))
+        response.raise_for_status()
+        data = response.json()
+        logger.info(f"Successfully triggered backfill for DAG {dag_id}: {data.get('dag_run_id')}")
+        return {
+            "status": "success",
+            "message": f"Triggered backfill for {dag_id}",
+            "dag_run_id": data.get("dag_run_id")
+        }
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to trigger Airflow DAG {dag_id}: {e}")
+        error_detail = "Failed to communicate with Airflow"
+        if e.response is not None:
+            error_detail = f"Airflow API Error: {e.response.text}"
+        raise HTTPException(status_code=500, detail=error_detail)

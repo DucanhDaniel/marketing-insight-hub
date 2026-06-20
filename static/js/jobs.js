@@ -112,6 +112,42 @@ window.initJobs = function() {
         }
     });
 
+    // Airflow Backfill form
+    document.getElementById('airflow-backfill-form')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const statusDiv = document.getElementById('backfill-job-status');
+        statusDiv.textContent = 'Triggering backfill...';
+        statusDiv.style.color = '#3498db';
+
+        const dagId = document.getElementById('backfill-dag-id').value.trim();
+        const startDate = document.getElementById('backfill-start-date').value;
+        const endDate = document.getElementById('backfill-end-date').value;
+
+        const payload = {
+            dag_id: dagId,
+            start_date: startDate,
+            end_date: endDate
+        };
+
+        try {
+            const res = await fetch(`${window.location.origin}/api/airflow/backfill`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.detail || `${res.status} ${res.statusText}`);
+            }
+            const data = await res.json();
+            statusDiv.textContent = `✅ ${data.message} (Run ID: ${data.dag_run_id})`;
+            statusDiv.style.color = '#2ecc71';
+        } catch (err) {
+            statusDiv.textContent = `❌ Failed: ${err.message}`;
+            statusDiv.style.color = '#e74c3c';
+        }
+    });
+
     // Start active jobs polling
     startPollingActiveJobs();
 };
